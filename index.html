@@ -22,7 +22,7 @@
       overflow: hidden;
       background: #0f172a;
       color: #f8fafc;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       touch-action: none;
       overscroll-behavior: none;
     }
@@ -38,7 +38,7 @@
       touch-action: none;
     }
 
-    /* 가로 회전 안내 */
+    /* 가로 회전 안내 (소형 세로 화면) */
     #rotate-notice {
       display: none;
       position: fixed;
@@ -52,7 +52,7 @@
       text-align: center;
       padding: 24px;
     }
-    @media (orientation: portrait) and (max-width: 900px) {
+    @media (orientation: portrait) and (max-width: 720px) and (max-height: 620px) {
       #rotate-notice { display: flex; }
     }
 
@@ -465,6 +465,8 @@
       margin-bottom: 5px;
       display: flex;
       justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
     }
     .skin-grid {
       display: grid;
@@ -488,6 +490,90 @@
       border-color: #38bdf8;
       background: rgba(56, 189, 248, 0.16);
       transform: scale(1.03);
+    }
+    .skin-card.locked {
+      opacity: 0.76;
+      border-color: #334155;
+      background: #090d16;
+    }
+    .skin-card.locked:hover {
+      border-color: #facc15;
+      opacity: 0.94;
+    }
+    .skin-card.rainbow-tier {
+      border-color: rgba(236, 72, 153, 0.55);
+    }
+    .skin-price-badge {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 999px;
+      margin-top: 1px;
+    }
+    .skin-price-badge.owned {
+      background: rgba(52, 211, 153, 0.18);
+      color: #34d399;
+      border: 1px solid rgba(52, 211, 153, 0.4);
+    }
+    .skin-price-badge.locked {
+      background: rgba(250, 204, 21, 0.18);
+      color: #fde047;
+      border: 1px solid rgba(250, 204, 21, 0.45);
+    }
+    .skin-price-badge.rainbow-price {
+      background: linear-gradient(90deg, rgba(244, 63, 94, 0.28), rgba(168, 85, 247, 0.28), rgba(56, 189, 248, 0.28));
+      color: #fdf2f8;
+      border: 1px solid #f472b6;
+    }
+    .gold-badge {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35));
+      border: 1.5px solid #facc15;
+      color: #fde047;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+    }
+    .reward-banner {
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid #334155;
+      color: #cbd5e1;
+    }
+    .reward-banner.earned {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(16, 185, 129, 0.22));
+      border-color: #facc15;
+      color: #fde047;
+    }
+    #skin-buy-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 130;
+      background: rgba(2, 6, 23, 0.82);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    #skin-buy-modal.hidden {
+      display: none !important;
+    }
+    .buy-modal-card {
+      background: #1e293b;
+      border: 2px solid #facc15;
+      border-radius: 16px;
+      padding: 18px;
+      width: 100%;
+      max-width: 340px;
+      text-align: center;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8);
     }
     .skin-preview {
       width: 32px;
@@ -904,7 +990,8 @@
             <span style="font-size:13px;font-weight:800;color:#cbd5e1;white-space:nowrap;">🏷️ 닉네임</span>
             <input type="text" id="nickname-input" maxlength="10" placeholder="닉네임 입력 (최대10자)" autocomplete="off" />
           </div>
-          <div style="display:flex;align-items:center;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span class="gold-badge" id="lobby-gold-display">💰 100G</span>
             <span id="nickname-saved-badge">✅ 자동 저장됨</span>
             <button id="btn-sound-lobby" class="sound-toggle-btn" type="button" title="배경음 및 효과음 켜기/끄기">🔊 소리 ON</button>
           </div>
@@ -922,7 +1009,7 @@
         </div>
 
         <div class="skin-label">
-          <span>🎨 캐릭터 스킨 선택 (10종)</span>
+          <span>🎨 캐릭터 스킨 선택 (기본 무료 / 일반 100G / 무지개 150G)</span>
           <span id="selected-skin-label" style="color:#38bdf8;">기본 러너</span>
         </div>
         <div class="skin-grid" id="skin-grid"></div>
@@ -960,9 +1047,13 @@
     <!-- 결과 화면 -->
     <div id="result-screen" class="overlay-screen hidden">
       <div class="panel" style="max-width:500px;text-align:center;">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:2px;">
+          <span class="gold-badge" id="result-gold-display">💰 100G</span>
+        </div>
         <div id="result-icon" style="font-size:46px;margin-bottom:4px;">🏆</div>
         <div id="result-title" class="title" style="font-size:25px;">1위 완주!</div>
         <div id="result-desc" style="font-size:13px;color:#cbd5e1;margin-top:4px;">총 10명 중 1위 · 완주 기록: 00.00초</div>
+        <div id="result-reward-banner" class="reward-banner">3위 안에 들면 50G를 획득합니다.</div>
         <div id="leaderboard-list"></div>
         <div class="btn-row">
           <button type="button" class="main-btn btn-online" id="btn-rematch">다시 매칭하기</button>
@@ -970,12 +1061,46 @@
         </div>
       </div>
     </div>
+
+    <!-- 스킨 구매 확인 모달 -->
+    <div id="skin-buy-modal" class="hidden" role="dialog" aria-modal="true">
+      <div class="buy-modal-card">
+        <div style="font-size:32px;margin-bottom:6px;">🛍️</div>
+        <div id="buy-modal-title" style="font-size:17px;font-weight:900;color:#f8fafc;margin-bottom:6px;">스킨 구매</div>
+        <div id="buy-modal-desc" style="font-size:13px;color:#cbd5e1;line-height:1.5;margin-bottom:14px;">
+          이 스킨을 100G에 구매하시겠습니까?
+        </div>
+        <div class="btn-row">
+          <button type="button" class="main-btn btn-bot" id="btn-confirm-buy-skin">💰 구매하기</button>
+          <button type="button" class="main-btn" style="background:#475569;" id="btn-cancel-buy-skin">취소</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
     // ==========================================
-    // 0-A. 안전한 햅틱 진동 & 캔버스 둥근 사각형 헬퍼
+    // 0-A. 안전한 스토리지, 진동 & 캔버스 헬퍼
     // ==========================================
+    const memoryStorageFallback = new Map();
+
+    function safeGetStorage(key, fallback = "") {
+      try {
+        const val = window.localStorage.getItem(key);
+        return val !== null ? val : fallback;
+      } catch (e) {
+        return memoryStorageFallback.has(key) ? memoryStorageFallback.get(key) : fallback;
+      }
+    }
+
+    function safeSetStorage(key, value) {
+      const strVal = String(value);
+      memoryStorageFallback.set(key, strVal);
+      try {
+        window.localStorage.setItem(key, strVal);
+      } catch (e) {}
+    }
+
     function triggerVibration(pattern) {
       try {
         if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
@@ -1008,7 +1133,7 @@
     // ==========================================
     const SoundEngine = (() => {
       let audioCtx = null;
-      let isMuted = localStorage.getItem("parkour_sound_muted") === "1";
+      let isMuted = safeGetStorage("parkour_sound_muted", "0") === "1";
       let bgmTimer = null;
       let bgmStep = 0;
 
@@ -1117,7 +1242,7 @@
 
       function toggleMute() {
         isMuted = !isMuted;
-        localStorage.setItem("parkour_sound_muted", isMuted ? "1" : "0");
+        safeSetStorage("parkour_sound_muted", isMuted ? "1" : "0");
         updateToggleButtonsUI();
         if (!isMuted) {
           unlockAndStart();
@@ -1150,13 +1275,22 @@
         playTone(230, "square", 0.26, now + 0.09, 0.10, 68);
       }
 
+      function playCoin() {
+        const ac = ensureContext();
+        if (!ac || isMuted) return;
+        const now = ac.currentTime;
+        playTone(987.77, "square", 0.09, now, 0.075);
+        playTone(1318.51, "triangle", 0.22, now + 0.08, 0.09);
+      }
+
       return {
         unlockAndStart,
         toggleMute,
         updateToggleButtonsUI,
         playJump,
         playSuperJump,
-        playDeath
+        playDeath,
+        playCoin
       };
     })();
 
@@ -1169,30 +1303,85 @@
     });
 
     // ==========================================
-    // 1. 10가지 캐릭터 스킨 데이터
+    // 1. 10가지 캐릭터 스킨 & 골드(G) 경제 시스템
     // ==========================================
+    const RAINBOW_COLORS = ["#f43f5e", "#fb923c", "#facc15", "#4ade80", "#38bdf8", "#a855f7", "#ec4899"];
+
     const SKINS = [
-      { id: 0, name: "기본 러너", body: "#38bdf8", accent: "#0284c7", eye: "#ffffff", band: "#facc15" },
-      { id: 1, name: "네온 사이버", body: "#a855f7", accent: "#6b21a8", eye: "#22d3ee", band: "#f472b6" },
-      { id: 2, name: "파이어 닌자", body: "#ef4444", accent: "#991b1b", eye: "#fef08a", band: "#1e293b" },
-      { id: 3, name: "골드 챔피언", body: "#f59e0b", accent: "#b45309", eye: "#ffffff", band: "#fef3c7" },
-      { id: 4, name: "우주인", body: "#f8fafc", accent: "#94a3b8", eye: "#38bdf8", band: "#0f172a" },
-      { id: 5, name: "고릴라 파워", body: "#475569", accent: "#1e293b", eye: "#fbbf24", band: "#a3e635" },
-      { id: 6, name: "아이스 슬라임", body: "#67e8f9", accent: "#06b6d4", eye: "#0f172a", band: "#ffffff" },
-      { id: 7, name: "다크 팬텀", body: "#1e1b4b", accent: "#090d16", eye: "#f43f5e", band: "#818cf8" },
-      { id: 8, name: "개구리 점퍼", body: "#4ade80", accent: "#15803d", eye: "#fef08a", band: "#fb7185" },
-      { id: 9, name: "레인보우 큐브", body: "#ec4899", accent: "#8b5cf6", eye: "#ffffff", band: "#34d399" }
+      { id: 0, name: "기본 러너", price: 0, body: "#38bdf8", accent: "#0284c7", eye: "#ffffff", band: "#facc15" },
+      { id: 1, name: "네온 사이버", price: 100, body: "#a855f7", accent: "#6b21a8", eye: "#22d3ee", band: "#f472b6" },
+      { id: 2, name: "파이어 닌자", price: 100, body: "#ef4444", accent: "#991b1b", eye: "#fef08a", band: "#1e293b" },
+      { id: 3, name: "골드 챔피언", price: 100, body: "#f59e0b", accent: "#b45309", eye: "#ffffff", band: "#fef3c7" },
+      { id: 4, name: "우주인", price: 100, body: "#f8fafc", accent: "#94a3b8", eye: "#38bdf8", band: "#0f172a" },
+      { id: 5, name: "고릴라 파워", price: 100, body: "#475569", accent: "#1e293b", eye: "#fbbf24", band: "#a3e635" },
+      { id: 6, name: "아이스 슬라임", price: 100, body: "#67e8f9", accent: "#06b6d4", eye: "#0f172a", band: "#ffffff" },
+      { id: 7, name: "다크 팬텀", price: 100, body: "#1e1b4b", accent: "#090d16", eye: "#f43f5e", band: "#818cf8" },
+      { id: 8, name: "개구리 점퍼", price: 100, body: "#4ade80", accent: "#15803d", eye: "#fef08a", band: "#fb7185" },
+      { id: 9, name: "레인보우 큐브", price: 150, isRainbow: true, body: "#ec4899", accent: "#8b5cf6", eye: "#ffffff", band: "#34d399" }
     ];
 
-    let selectedSkinId = Number(localStorage.getItem("parkour_skin_id") || 0);
-    if (!SKINS[selectedSkinId]) selectedSkinId = 0;
+    const TOP3_REWARD_GOLD = 50;
+    const INITIAL_GOLD = 100;
+
+    function getSkinPrice(skin) {
+      if (!skin || skin.id === 0) return 0;
+      return typeof skin.price === "number" ? skin.price : 100;
+    }
+
+    function pickSkinTrailColor(skinId, indexHint = 0) {
+      const skin = SKINS[skinId] || SKINS[0];
+      if (skin.isRainbow) {
+        const idx = (Math.floor(Math.random() * RAINBOW_COLORS.length) + indexHint) % RAINBOW_COLORS.length;
+        return RAINBOW_COLORS[idx];
+      }
+      const roll = Math.random();
+      if (roll < 0.65) return skin.body;
+      if (roll < 0.88) return skin.band;
+      return skin.eye;
+    }
+
+    const rawSavedGold = safeGetStorage("parkour_gold", null);
+    const parsedSavedGold = rawSavedGold !== null ? Number(rawSavedGold) : NaN;
+    let playerGold = rawSavedGold === null
+      ? INITIAL_GOLD
+      : (Number.isFinite(parsedSavedGold) ? Math.max(0, Math.floor(parsedSavedGold)) : INITIAL_GOLD);
+
+    let unlockedSkins = [0];
+    try {
+      const savedUnlocked = JSON.parse(safeGetStorage("parkour_unlocked_skins", "[0]"));
+      if (Array.isArray(savedUnlocked)) {
+        unlockedSkins = Array.from(new Set([0, ...savedUnlocked.map(Number).filter(n => Boolean(SKINS[n]))]));
+      }
+    } catch (e) {
+      unlockedSkins = [0];
+    }
+
+    function updateGoldDisplays() {
+      const lobbyGoldEl = document.getElementById("lobby-gold-display");
+      const resultGoldEl = document.getElementById("result-gold-display");
+      if (lobbyGoldEl) lobbyGoldEl.textContent = `💰 ${playerGold}G`;
+      if (resultGoldEl) resultGoldEl.textContent = `💰 ${playerGold}G`;
+    }
+
+    function saveEconomyState() {
+      safeSetStorage("parkour_gold", String(playerGold));
+      safeSetStorage("parkour_unlocked_skins", JSON.stringify(unlockedSkins));
+      updateGoldDisplays();
+    }
+
+    let selectedSkinId = Number(safeGetStorage("parkour_skin_id", "0"));
+    if (!SKINS[selectedSkinId] || !unlockedSkins.includes(selectedSkinId)) {
+      selectedSkinId = 0;
+      safeSetStorage("parkour_skin_id", "0");
+    }
+    saveEconomyState();
 
     // ==========================================
-    // 2. 닉네임 & 친구 목록 localStorage 자동 저장
+    // 2. 닉네임 & 친구 목록 자동 저장
     // ==========================================
     const DEFAULT_NICK = "러너" + Math.floor(100 + Math.random() * 900);
-    let myNickname = (localStorage.getItem("parkour_nickname") || "").trim() || DEFAULT_NICK;
-    localStorage.setItem("parkour_nickname", myNickname);
+    let myNickname = (safeGetStorage("parkour_nickname", "") || "").trim() || DEFAULT_NICK;
+    safeSetStorage("parkour_nickname", myNickname);
 
     const nickInput = document.getElementById("nickname-input");
     const nickBadge = document.getElementById("nickname-saved-badge");
@@ -1205,7 +1394,7 @@
 
     let friendsList = [];
     try {
-      const savedFriends = JSON.parse(localStorage.getItem("parkour_friends") || "[]");
+      const savedFriends = JSON.parse(safeGetStorage("parkour_friends", "[]"));
       if (Array.isArray(savedFriends)) friendsList = savedFriends;
     } catch (e) {
       friendsList = [];
@@ -1215,7 +1404,7 @@
     const recentlyInvitedSet = new Set();
 
     function saveFriends() {
-      localStorage.setItem("parkour_friends", JSON.stringify(friendsList));
+      safeSetStorage("parkour_friends", JSON.stringify(friendsList));
       renderFriendsList();
     }
 
@@ -1286,12 +1475,84 @@
       });
     }
 
+    let pendingBuySkinId = null;
+
+    function openSkinBuyModal(skin) {
+      pendingBuySkinId = skin.id;
+      const price = getSkinPrice(skin);
+      const titleEl = document.getElementById("buy-modal-title");
+      const descEl = document.getElementById("buy-modal-desc");
+      const confirmBtn = document.getElementById("btn-confirm-buy-skin");
+      const canAfford = playerGold >= price;
+
+      if (titleEl) titleEl.textContent = `🎨 [${skin.name}] 스킨 구매`;
+      if (descEl) {
+        descEl.innerHTML = canAfford
+          ? `가격: <strong style="color:#fde047;">${price}G</strong> (현재 보유: <strong style="color:#34d399;">${playerGold}G</strong>)<br>구매 후 즉시 장착됩니다. 구매하시겠습니까?`
+          : `가격: <strong style="color:#fde047;">${price}G</strong> (현재 보유: <strong style="color:#f87171;">${playerGold}G</strong>)<br>골드가 부족합니다! 레이스에서 3위 이내 입상 시 <strong>50G</strong>를 획득할 수 있습니다.`;
+      }
+      if (confirmBtn) {
+        confirmBtn.textContent = `💰 ${price}G 구매`;
+        confirmBtn.disabled = !canAfford;
+        confirmBtn.style.opacity = canAfford ? "1" : "0.45";
+        confirmBtn.style.cursor = canAfford ? "pointer" : "not-allowed";
+      }
+      const modalEl = document.getElementById("skin-buy-modal");
+      if (modalEl) modalEl.classList.remove("hidden");
+    }
+
+    function closeSkinBuyModal() {
+      pendingBuySkinId = null;
+      const modalEl = document.getElementById("skin-buy-modal");
+      if (modalEl) modalEl.classList.add("hidden");
+    }
+
+    document.getElementById("skin-buy-modal").addEventListener("click", (e) => {
+      if (e.target.id === "skin-buy-modal") closeSkinBuyModal();
+    });
+
+    document.getElementById("btn-confirm-buy-skin").addEventListener("click", () => {
+      if (pendingBuySkinId === null) return;
+      const targetSkin = SKINS[pendingBuySkinId];
+      closeSkinBuyModal();
+      if (!targetSkin || unlockedSkins.includes(targetSkin.id)) return;
+      const price = getSkinPrice(targetSkin);
+      if (playerGold < price) {
+        document.getElementById("match-status").textContent =
+          `⚠️ 골드가 부족합니다! (필요: ${price}G / 보유: ${playerGold}G - 레이스 3위 이내 입상 시 50G 획득)`;
+        return;
+      }
+      playerGold -= price;
+      unlockedSkins.push(targetSkin.id);
+      selectedSkinId = targetSkin.id;
+      safeSetStorage("parkour_skin_id", String(selectedSkinId));
+      saveEconomyState();
+      SoundEngine.playCoin();
+      document.getElementById("match-status").textContent =
+        `🎉 [${targetSkin.name}] 스킨 구매 및 장착 완료! (남은 골드: ${playerGold}G)`;
+      renderSkinGrid();
+    });
+
+    document.getElementById("btn-cancel-buy-skin").addEventListener("click", closeSkinBuyModal);
+
     function renderSkinGrid() {
       const grid = document.getElementById("skin-grid");
       grid.innerHTML = "";
       SKINS.forEach(skin => {
+        const isUnlocked = skin.id === 0 || unlockedSkins.includes(skin.id);
+        const price = getSkinPrice(skin);
         const card = document.createElement("div");
-        card.className = "skin-card" + (skin.id === selectedSkinId ? " active" : "");
+        card.className = "skin-card"
+          + (skin.id === selectedSkinId ? " active" : "")
+          + (!isUnlocked ? " locked" : "")
+          + (skin.isRainbow ? " rainbow-tier" : "");
+
+        const priceBadgeHtml = skin.id === 0
+          ? `<span class="skin-price-badge owned">기본 무료</span>`
+          : (isUnlocked
+              ? `<span class="skin-price-badge owned">보유중</span>`
+              : `<span class="skin-price-badge ${skin.isRainbow ? "rainbow-price" : "locked"}">🔒 ${price}G</span>`);
+
         card.innerHTML = `
           <div class="skin-preview" style="border-color:${skin.band};">
             <svg viewBox="0 0 40 40" aria-hidden="true">
@@ -1312,12 +1573,17 @@
             </svg>
           </div>
           <div class="skin-name">${skin.name}</div>
+          ${priceBadgeHtml}
         `;
         card.addEventListener("click", () => {
-          selectedSkinId = skin.id;
-          localStorage.setItem("parkour_skin_id", String(selectedSkinId));
-          document.getElementById("selected-skin-label").textContent = skin.name;
-          renderSkinGrid();
+          if (isUnlocked) {
+            selectedSkinId = skin.id;
+            safeSetStorage("parkour_skin_id", String(selectedSkinId));
+            document.getElementById("selected-skin-label").textContent = skin.name;
+            renderSkinGrid();
+          } else {
+            openSkinBuyModal(skin);
+          }
         });
         grid.appendChild(card);
       });
@@ -1327,7 +1593,7 @@
     renderFriendsList();
 
     // ==========================================
-    // 3. 상시 로비 프레즌스 & 친구 초대 채널 (MQTT)
+    // 3. 상시 로비 프레즌스 & 친구 초대 채널 (안전 폴백 포함)
     // ==========================================
     const LOBBY_PRESENCE_TOPIC = "parkour-rush-lobby-presence-v1";
     let lobbyMqtt = null;
@@ -1335,40 +1601,49 @@
     let pendingInvite = null;
     let inviteDismissTimer = null;
     let inviteProgressInterval = null;
+    let activeRoomCode = "";
+    let gameState = "LOBBY";
 
     function getInviteTopicForNick(nick) {
       return "parkour-rush-invite-" + encodeURIComponent((nick || "").trim());
     }
 
     function syncInviteSubscription() {
-      if (!lobbyMqtt || !lobbyMqtt.connected) return;
-      const desiredTopic = getInviteTopicForNick(myNickname);
-      if (subscribedInviteTopic && subscribedInviteTopic !== desiredTopic) {
-        lobbyMqtt.unsubscribe(subscribedInviteTopic);
-      }
-      if (subscribedInviteTopic !== desiredTopic) {
-        lobbyMqtt.subscribe(desiredTopic);
-        subscribedInviteTopic = desiredTopic;
-      }
+      try {
+        if (!lobbyMqtt || !lobbyMqtt.connected) return;
+        const desiredTopic = getInviteTopicForNick(myNickname);
+        if (subscribedInviteTopic && subscribedInviteTopic !== desiredTopic) {
+          lobbyMqtt.unsubscribe(subscribedInviteTopic);
+        }
+        if (subscribedInviteTopic !== desiredTopic) {
+          lobbyMqtt.subscribe(desiredTopic);
+          subscribedInviteTopic = desiredTopic;
+        }
+      } catch (e) {}
     }
 
     function initPersistentLobbyPresence() {
-      if (typeof mqtt === "undefined") return;
+      if (typeof mqtt === "undefined" || !mqtt || typeof mqtt.connect !== "function") return;
       try {
         lobbyMqtt = mqtt.connect("wss://broker.emqx.io:8084/mqtt", {
           clientId: "pk_lobby_" + Math.random().toString(36).slice(2, 10),
           clean: true,
-          reconnectPeriod: 3000,
-          connectTimeout: 5000
+          reconnectPeriod: 5000,
+          connectTimeout: 4000
         });
       } catch (e) {
+        lobbyMqtt = null;
         return;
       }
 
+      lobbyMqtt.on("error", () => {});
+
       lobbyMqtt.on("connect", () => {
-        lobbyMqtt.subscribe(LOBBY_PRESENCE_TOPIC);
-        syncInviteSubscription();
-        publishLobbyPresence();
+        try {
+          lobbyMqtt.subscribe(LOBBY_PRESENCE_TOPIC);
+          syncInviteSubscription();
+          publishLobbyPresence();
+        } catch (e) {}
       });
 
       lobbyMqtt.on("message", (topic, payload) => {
@@ -1398,24 +1673,26 @@
     }
 
     function publishLobbyPresence() {
-      if (!lobbyMqtt || !lobbyMqtt.connected) return;
-      syncInviteSubscription();
-      lobbyMqtt.publish(LOBBY_PRESENCE_TOPIC, JSON.stringify({
-        nick: myNickname,
-        skin: selectedSkinId,
-        status: gameState,
-        roomCode: activeRoomCode || "",
-        ts: Date.now()
-      }));
+      try {
+        if (!lobbyMqtt || !lobbyMqtt.connected) return;
+        syncInviteSubscription();
+        lobbyMqtt.publish(LOBBY_PRESENCE_TOPIC, JSON.stringify({
+          nick: myNickname,
+          skin: selectedSkinId,
+          status: gameState,
+          roomCode: activeRoomCode || "",
+          ts: Date.now()
+        }));
+      } catch (e) {}
     }
 
-    setInterval(publishLobbyPresence, 2500);
+    setInterval(publishLobbyPresence, 3000);
 
     nickInput.addEventListener("input", () => {
       const raw = nickInput.value.trim().slice(0, 10);
       if (raw) {
         myNickname = raw;
-        localStorage.setItem("parkour_nickname", myNickname);
+        safeSetStorage("parkour_nickname", myNickname);
         nickBadge.textContent = "✅ 저장됨 (" + myNickname + ")";
         syncInviteSubscription();
       } else {
@@ -1426,7 +1703,7 @@
     nickInput.addEventListener("blur", () => {
       myNickname = getSanitizedNickname();
       nickInput.value = myNickname;
-      localStorage.setItem("parkour_nickname", myNickname);
+      safeSetStorage("parkour_nickname", myNickname);
       nickBadge.textContent = "✅ 자동 저장됨";
       syncInviteSubscription();
       publishLobbyPresence();
@@ -1450,11 +1727,13 @@
         ts: Date.now()
       };
 
-      if (lobbyMqtt && lobbyMqtt.connected) {
-        lobbyMqtt.publish(targetTopic, JSON.stringify(invitePacket));
-      } else if (mqttClient && mqttClient.connected) {
-        mqttClient.publish(targetTopic, JSON.stringify(invitePacket));
-      }
+      try {
+        if (lobbyMqtt && lobbyMqtt.connected) {
+          lobbyMqtt.publish(targetTopic, JSON.stringify(invitePacket));
+        } else if (mqttClient && mqttClient.connected) {
+          mqttClient.publish(targetTopic, JSON.stringify(invitePacket));
+        }
+      } catch (e) {}
 
       recentlyInvitedSet.add(friend.name);
       renderFriendsList();
@@ -1552,8 +1831,8 @@
     }
 
     function buildCourse(mapIndex, seed) {
-      const theme = MAP_THEMES[mapIndex % MAP_THEMES.length];
-      const rand = mulberry32(seed);
+      const theme = MAP_THEMES[Math.abs(Number(mapIndex) || 0) % MAP_THEMES.length];
+      const rand = mulberry32(Number(seed) || 12345);
       const platforms = [];
       const hazards = [];
       const springs = [];
@@ -1650,13 +1929,13 @@
 
     function bindButton(el, keyName, onTrigger) {
       const press = (e) => {
-        if (e.cancelable) e.preventDefault();
+        if (e && e.type === "touchstart" && e.cancelable) e.preventDefault();
         input[keyName] = true;
         el.classList.add("pressed");
         if (onTrigger) onTrigger();
       };
       const release = (e) => {
-        if (e && e.cancelable) e.preventDefault();
+        if (e && e.type && e.type.startsWith("touch") && e.cancelable) e.preventDefault();
         input[keyName] = false;
         el.classList.remove("pressed");
       };
@@ -1696,16 +1975,19 @@
     window.addEventListener("blur", resetInputs);
 
     // ==========================================
-    // 7. 멀티플레이어 레이스 상태 & 물리
+    // 7. 멀티플레이어 레이스 상태 & 물리 + 트레일/점프 이펙트
     // ==========================================
     let currentCourse = buildCourse(0, 12345);
-    let gameState = "LOBBY";
     let matchMode = "BOT";
-    let activeRoomCode = "";
     let raceStartTime = 0;
     let elapsedTime = 0;
     let animClock = 0;
     let countdownInterval = null;
+    let raceRewardClaimed = false;
+    let backTrailParticles = [];
+    let jumpRingEffects = [];
+    let backTrailSpawnAcc = 0;
+    const racerTrailSpawnAcc = new Map();
 
     const player = {
       id: "ME",
@@ -1743,6 +2025,7 @@
           w: 30, h: 42,
           facing: 1,
           grounded: true,
+          prevGrounded: true,
           dashing: false,
           walkPhase: i * 1.1,
           skinId: (selectedSkinId + i + 1) % SKINS.length,
@@ -1785,6 +2068,10 @@
       player.respawnY = course.startY;
       player.finished = false;
       player.finishTime = null;
+      backTrailParticles = [];
+      jumpRingEffects = [];
+      backTrailSpawnAcc = 0;
+      racerTrailSpawnAcc.clear();
 
       racers.forEach((r, idx) => {
         r.x = course.startX;
@@ -1793,6 +2080,7 @@
         r.targetY = course.startY;
         r.facing = 1;
         r.grounded = true;
+        r.prevGrounded = true;
         r.dashing = false;
         r.progress = 0;
         r.finished = false;
@@ -1803,12 +2091,72 @@
       setupProgressMarkers();
     }
 
+    function spawnJumpBurst(footCenterX, footY, skinId, isSuperJump = false) {
+      if (backTrailParticles.length > 420) {
+        backTrailParticles.splice(0, backTrailParticles.length - 420);
+      }
+      if (jumpRingEffects.length > 48) {
+        jumpRingEffects.splice(0, jumpRingEffects.length - 48);
+      }
+
+      const skin = SKINS[skinId] || SKINS[0];
+      const count = isSuperJump ? 20 : 12;
+
+      // 발밑 확산 충격파 링 추가
+      const ringCount = isSuperJump ? 2 : 1;
+      for (let rIdx = 0; rIdx < ringCount; rIdx++) {
+        const ringColor = skin.isRainbow
+          ? RAINBOW_COLORS[(Math.floor(Math.random() * RAINBOW_COLORS.length) + rIdx * 2) % RAINBOW_COLORS.length]
+          : (rIdx === 0 ? skin.body : skin.band);
+        jumpRingEffects.push({
+          x: footCenterX,
+          y: footY - 2,
+          rx: 6 + rIdx * 4,
+          ry: 2.5 + rIdx * 1.5,
+          maxRx: (isSuperJump ? 42 : 28) + rIdx * 12,
+          maxRy: (isSuperJump ? 14 : 9) + rIdx * 4,
+          life: (isSuperJump ? 0.36 : 0.28) + rIdx * 0.06,
+          maxLife: (isSuperJump ? 0.36 : 0.28) + rIdx * 0.06,
+          color: ringColor,
+          lineWidth: isSuperJump ? 3.2 : 2.4
+        });
+      }
+
+      // 방사형 & 상승 점프 파티클 분출
+      for (let i = 0; i < count; i++) {
+        const spreadAngle = -Math.PI + (Math.PI * (i + 0.5)) / count + (Math.random() - 0.5) * 0.25;
+        const speed = (isSuperJump ? 130 : 85) + Math.random() * (isSuperJump ? 140 : 95);
+        const vx = Math.cos(spreadAngle) * speed * 1.25;
+        const vy = Math.sin(spreadAngle) * speed * 0.85 - (isSuperJump ? 65 : 30);
+        const maxLife = (isSuperJump ? 0.38 : 0.30) + Math.random() * 0.14;
+        const color = pickSkinTrailColor(skinId, i);
+        const kind = i % 3 === 0 ? "spark" : (i % 3 === 1 ? "streamer" : "wind");
+
+        backTrailParticles.push({
+          x: footCenterX + (Math.random() - 0.5) * 14,
+          y: footY - 3 + (Math.random() - 0.5) * 4,
+          vx,
+          vy,
+          life: maxLife,
+          maxLife,
+          size: (isSuperJump ? 5.6 : 4.2) + Math.random() * 2.8,
+          length: (isSuperJump ? 20 : 14) + Math.random() * 10,
+          angle: Math.atan2(vy, vx),
+          color,
+          accentColor: skin.band,
+          kind,
+          isDash: isSuperJump
+        });
+      }
+    }
+
     function tryJump() {
       if (gameState !== "RACING") return;
       if (player.grounded || player.coyoteTimer > 0) {
         player.vy = -660;
         player.grounded = false;
         player.coyoteTimer = 0;
+        spawnJumpBurst(player.x + player.w * 0.5, player.y + player.h, selectedSkinId, false);
         SoundEngine.playJump();
         triggerVibration(28);
       }
@@ -1821,12 +2169,162 @@
         player.dashActiveTimer = 0.18;
         player.vx = player.facing * 920;
         player.vy = Math.min(player.vy, 0) * 0.25;
+        emitBackTrailBurst(
+          player.x + player.w * 0.5,
+          player.y + player.h * 0.45,
+          player.facing,
+          selectedSkinId,
+          14,
+          true
+        );
         triggerVibration(18);
       }
     }
 
+    function spawnBackTrailParticle(backX, backY, emitDirX, skinId, isDash, indexHint = 0) {
+      if (backTrailParticles.length > 420) {
+        backTrailParticles.splice(0, backTrailParticles.length - 420);
+      }
+      const skin = SKINS[skinId] || SKINS[0];
+      const kindRoll = Math.random();
+      const kind = isDash
+        ? (kindRoll < 0.45 ? "streamer" : (kindRoll < 0.8 ? "wind" : "spark"))
+        : (kindRoll < 0.35 ? "streamer" : (kindRoll < 0.65 ? "wind" : "spark"));
+
+      const color = pickSkinTrailColor(skinId, indexHint);
+
+      const speedScale = isDash ? 1.85 : 1.0;
+      const vx = emitDirX * (55 + Math.random() * 115) * speedScale + (Math.random() - 0.5) * 28;
+      const vy = -16 + (Math.random() - 0.5) * (isDash ? 54 : 34);
+      const maxLife = (isDash ? 0.28 : 0.24) + Math.random() * 0.16;
+
+      backTrailParticles.push({
+        x: backX + (Math.random() - 0.5) * 6,
+        y: backY + (Math.random() - 0.5) * 14,
+        vx,
+        vy,
+        life: maxLife,
+        maxLife,
+        size: (isDash ? 5.5 : 3.8) + Math.random() * 3.5,
+        length: (isDash ? 24 : 15) + Math.random() * 14,
+        angle: Math.atan2(vy, vx),
+        color,
+        accentColor: skin.band,
+        kind,
+        isDash
+      });
+    }
+
+    function emitBackTrailBurst(centerX, centerY, facing, skinId, count, isDash) {
+      const dir = facing >= 0 ? 1 : -1;
+      const backX = centerX - dir * 13;
+      const emitDirX = -dir;
+      for (let i = 0; i < count; i++) {
+        spawnBackTrailParticle(backX, centerY, emitDirX, skinId, isDash, i);
+      }
+    }
+
+    function updateBackTrailParticles(dt) {
+      for (let i = jumpRingEffects.length - 1; i >= 0; i--) {
+        const ring = jumpRingEffects[i];
+        ring.life -= dt;
+        if (ring.life <= 0) {
+          jumpRingEffects.splice(i, 1);
+          continue;
+        }
+        const progress = 1 - (ring.life / ring.maxLife);
+        const easeOut = 1 - Math.pow(1 - progress, 2);
+        ring.rx = 6 + (ring.maxRx - 6) * easeOut;
+        ring.ry = 2.5 + (ring.maxRy - 2.5) * easeOut;
+      }
+
+      for (let i = backTrailParticles.length - 1; i >= 0; i--) {
+        const pt = backTrailParticles[i];
+        pt.life -= dt;
+        if (pt.life <= 0) {
+          backTrailParticles.splice(i, 1);
+          continue;
+        }
+        pt.x += pt.vx * dt;
+        pt.y += pt.vy * dt;
+        pt.vx *= Math.pow(0.18, dt);
+        pt.vy *= Math.pow(0.28, dt);
+        if (pt.kind === "streamer") {
+          pt.vy += Math.sin(pt.life * 26) * 24 * dt;
+        }
+        pt.angle = Math.atan2(pt.vy, pt.vx);
+      }
+    }
+
+    function renderBackTrailParticles() {
+      if (jumpRingEffects.length > 0) {
+        ctx.save();
+        for (const ring of jumpRingEffects) {
+          const ratio = Math.max(0, ring.life / ring.maxLife);
+          ctx.globalAlpha = Math.min(0.95, ratio * 0.9);
+          ctx.strokeStyle = ring.color;
+          ctx.lineWidth = Math.max(1.2, ring.lineWidth * ratio);
+          ctx.beginPath();
+          ctx.ellipse(ring.x, ring.y, ring.rx, ring.ry, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      if (backTrailParticles.length === 0) return;
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      for (const pt of backTrailParticles) {
+        const ratio = Math.max(0, pt.life / pt.maxLife);
+        const alpha = Math.min(1, ratio * 1.15);
+        ctx.globalAlpha = alpha * (pt.isDash ? 0.92 : 0.78);
+
+        if (pt.kind === "streamer") {
+          const tailX = pt.x - Math.cos(pt.angle) * pt.length * ratio;
+          const tailY = pt.y - Math.sin(pt.angle) * pt.length * ratio;
+          ctx.strokeStyle = pt.color;
+          ctx.lineWidth = Math.max(1.8, pt.size * ratio);
+          ctx.beginPath();
+          ctx.moveTo(pt.x, pt.y);
+          ctx.lineTo(tailX, tailY);
+          ctx.stroke();
+        } else if (pt.kind === "wind") {
+          const span = pt.length * (0.65 + 0.45 * ratio);
+          const halfSpan = span * 0.5;
+          const perpX = -Math.sin(pt.angle);
+          const perpY = Math.cos(pt.angle);
+          const archOffset = Math.sin(ratio * Math.PI) * 4.5;
+
+          ctx.strokeStyle = pt.color;
+          ctx.lineWidth = Math.max(1.5, pt.size * 0.55 * ratio);
+          ctx.beginPath();
+          ctx.moveTo(pt.x - Math.cos(pt.angle) * halfSpan, pt.y - Math.sin(pt.angle) * halfSpan);
+          ctx.quadraticCurveTo(
+            pt.x + perpX * archOffset,
+            pt.y + perpY * archOffset,
+            pt.x + Math.cos(pt.angle) * halfSpan,
+            pt.y + Math.sin(pt.angle) * halfSpan
+          );
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = pt.color;
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 1.1;
+          const r = Math.max(1.8, pt.size * 0.65 * ratio);
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+          ctx.fill();
+          if (pt.isDash) ctx.stroke();
+        }
+      }
+
+      ctx.restore();
+    }
+
     // ==========================================
-    // 8. 5자리 방 코드 & 실시간 매칭 (방 인원끼리 바로 시작 지원)
+    // 8. 5자리 방 코드 & 실시간 매칭 (즉시 화면 전환 보장)
     // ==========================================
     let mqttClient = null;
     let peer = null;
@@ -1866,6 +2364,25 @@
       document.getElementById("room-banner").classList.add("hidden");
     }
 
+    function transitionToLobby(statusMessage = "친구를 눌러 바로 방에 초대하거나, 방 만들기 / 10인 매치를 선택하세요!") {
+      cleanupNetwork();
+      closeSkinBuyModal();
+      resetInputs();
+      gameState = "LOBBY";
+      elapsedTime = 0;
+      document.getElementById("hud-timer").textContent = "⏱️ 00.00s";
+      document.getElementById("progress-me").style.width = "0%";
+      document.getElementById("marker-me").style.left = "0%";
+      publishLobbyPresence();
+      updateGoldDisplays();
+      renderSkinGrid();
+      renderFriendsList();
+      document.getElementById("countdown-overlay").classList.add("hidden");
+      document.getElementById("result-screen").classList.add("hidden");
+      document.getElementById("lobby-screen").classList.remove("hidden");
+      document.getElementById("match-status").textContent = statusMessage;
+    }
+
     function updateHostStartButtonUI() {
       const fillBtn = document.getElementById("btn-fill-now");
       if (matchMode === "CUSTOM_HOST") {
@@ -1878,7 +2395,7 @@
           fillBtn.classList.remove("party-ready");
           fillBtn.textContent = "🚀 지금 출발하기 (빈자리 AI 합류로 10명 시작)";
         }
-      } else if (matchMode === "ONLINE_RANDOM") {
+      } else if (matchMode === "ONLINE_RANDOM" || matchMode === "CUSTOM_GUEST") {
         fillBtn.classList.remove("hidden");
         fillBtn.classList.remove("party-ready");
         fillBtn.textContent = "🚀 지금 출발하기 (빈자리 AI 합류로 10명 시작)";
@@ -1907,6 +2424,7 @@
       if (matchLoopTimer) { clearInterval(matchLoopTimer); matchLoopTimer = null; }
       if (autoFillTimer) { clearInterval(autoFillTimer); autoFillTimer = null; }
       if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+      closeSkinBuyModal();
 
       const fillBtn = document.getElementById("btn-fill-now");
       fillBtn.classList.add("hidden");
@@ -1916,13 +2434,17 @@
 
       resetInputs();
       myNickname = getSanitizedNickname();
+      safeSetStorage("parkour_nickname", myNickname);
+      raceRewardClaimed = false;
+      elapsedTime = 0;
+      document.getElementById("hud-timer").textContent = "⏱️ 00.00s";
       gameState = "COUNTDOWN";
       currentCourse = buildCourse(mapIdx, seed);
 
       const builtRacers = [];
-      onlinePeersList.slice(0, 9).forEach((pInfo, idx) => {
+      (onlinePeersList || []).slice(0, 9).forEach((pInfo, idx) => {
         builtRacers.push({
-          id: pInfo.id,
+          id: pInfo.id || ("PEER_" + idx),
           name: (pInfo.nick || ("P" + (idx + 2))).slice(0, 10),
           isBot: false,
           x: currentCourse.startX,
@@ -1932,6 +2454,7 @@
           w: 30, h: 42,
           facing: 1,
           grounded: true,
+          prevGrounded: true,
           dashing: false,
           walkPhase: idx * 0.8,
           skinId: pInfo.skin ?? ((idx + 1) % SKINS.length),
@@ -1951,6 +2474,7 @@
 
       racers = builtRacers;
       resetPlayersForCourse(currentCourse);
+      resizeCanvas();
 
       const totalCount = getTotalParticipants();
       document.getElementById("hud-rank").textContent = `🏅 1위 / ${totalCount}명`;
@@ -1984,7 +2508,7 @@
           clearInterval(countdownInterval);
           countdownInterval = null;
         }
-      }, 850);
+      }, 750);
     }
 
     function startBot10PMatch() {
@@ -1996,14 +2520,16 @@
     }
 
     function launchOnline10PRoom() {
-      if (gameState !== "MATCHING") return;
+      if (gameState !== "MATCHING") {
+        startBot10PMatch();
+        return;
+      }
       myNickname = getSanitizedNickname();
       queueMembers.set(myPeerId, { id: myPeerId, nick: myNickname, skin: selectedSkinId, lastSeen: Date.now() });
 
       const rosterList = Array.from(queueMembers.values()).slice(0, 10);
       const others = rosterList.filter(m => m.id !== myPeerId).slice(0, 9);
 
-      // 커스텀 방에서 2명 이상 모였으면 AI 없이 현재 방 인원끼리 바로 시작
       const shouldFillBots = !(matchMode === "CUSTOM_HOST" && rosterList.length >= 2);
       const totalPlayersInRace = shouldFillBots ? 10 : rosterList.length;
 
@@ -2023,9 +2549,9 @@
       };
 
       peerConns.forEach(c => {
-        if (c.open) {
-          c.send(startPacket);
-        }
+        try {
+          if (c.open) c.send(startPacket);
+        } catch (e) {}
       });
 
       if (activeRoomCode && mqttClient && mqttClient.connected) {
@@ -2041,10 +2567,11 @@
     function connectRoomOrQueue(mode, roomCode) {
       cleanupNetwork();
       myNickname = getSanitizedNickname();
+      safeSetStorage("parkour_nickname", myNickname);
       matchMode = mode;
       activeRoomCode = roomCode || "";
       gameState = "MATCHING";
-      waitSeconds = 12;
+      waitSeconds = 8;
       publishLobbyPresence();
 
       const statusEl = document.getElementById("match-status");
@@ -2056,54 +2583,72 @@
         document.getElementById("active-room-code").textContent = activeRoomCode;
       }
 
-      statusEl.textContent = activeRoomCode
-        ? `🏠 방 [${activeRoomCode}] 서버에 연결 중...`
-        : "🌐 10인 랜덤 매치 대기열 연결 중...";
-
       myPeerId = "pk10_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 6);
       queueMembers.set(myPeerId, { id: myPeerId, nick: myNickname, skin: selectedSkinId, lastSeen: Date.now() });
       updateLobbySlotsUI();
+      fillBtn.classList.remove("hidden");
+
+      statusEl.textContent = activeRoomCode
+        ? `🏠 방 [${activeRoomCode}] 대기 중 · 바로 시작하려면 아래 '지금 출발하기'를 누르세요!`
+        : "🌐 10인 매치 대기 중 · '지금 출발하기'로 즉시 시작하거나 상대를 기다리세요!";
+
+      if (mode === "ONLINE_RANDOM") {
+        autoFillTimer = setInterval(() => {
+          if (gameState !== "MATCHING") return;
+          waitSeconds--;
+          statusEl.textContent = `🔍 매칭 중 (${queueMembers.size}/10명) · ${waitSeconds}초 후 빈자리 AI 합류 및 자동 출발!`;
+          if (waitSeconds <= 0) {
+            launchOnline10PRoom();
+          }
+        }, 1000);
+      }
 
       if (typeof Peer === "undefined" || typeof mqtt === "undefined") {
-        statusEl.textContent = "⚠️ 오프라인 환경입니다. 'AI 봇 9명과 연습' 버튼으로 바로 시작할 수 있습니다!";
-        if (mode === "CUSTOM_HOST" || mode === "ONLINE_RANDOM") fillBtn.classList.remove("hidden");
         return;
       }
 
       try {
         peer = new Peer(myPeerId);
+        peer.on("error", () => {});
+        peer.on("connection", (incoming) => {
+          if (gameState !== "MATCHING" || peerConns.size >= 9) {
+            try { incoming.close(); } catch (e) {}
+            return;
+          }
+          attachPeerConn(incoming);
+        });
       } catch (err) {
-        statusEl.textContent = "⚠️ 외부 P2P 소켓이 제한된 환경입니다. 'AI 봇 9명과 연습'으로 플레이하세요!";
-        if (mode === "CUSTOM_HOST" || mode === "ONLINE_RANDOM") fillBtn.classList.remove("hidden");
+        peer = null;
+      }
+
+      const topic = activeRoomCode
+        ? `parkour-rush-room-${activeRoomCode}-v1`
+        : "parkour-rush-10p-global-queue-v1";
+
+      try {
+        mqttClient = mqtt.connect("wss://broker.emqx.io:8084/mqtt", {
+          clientId: myPeerId,
+          clean: true,
+          reconnectPeriod: 0,
+          connectTimeout: 3500
+        });
+      } catch (err) {
+        mqttClient = null;
         return;
       }
 
-      peer.on("open", () => {
-        updateHostStartButtonUI();
+      mqttClient.on("error", () => {});
 
-        const topic = activeRoomCode
-          ? `parkour-rush-room-${activeRoomCode}-v1`
-          : "parkour-rush-10p-global-queue-v1";
-
+      mqttClient.on("connect", () => {
         try {
-          mqttClient = mqtt.connect("wss://broker.emqx.io:8084/mqtt", {
-            clientId: myPeerId,
-            clean: true,
-            reconnectPeriod: 0,
-            connectTimeout: 5000
-          });
-        } catch (err) {
-          statusEl.textContent = "⚠️ 네트워크 제한 환경입니다. 'AI 봇 9명과 연습'을 눌러 바로 시작해 보세요!";
-          return;
-        }
-
-        mqttClient.on("connect", () => {
           mqttClient.subscribe(topic);
+        } catch (e) {}
 
-          const broadcastPresence = () => {
-            if (gameState !== "MATCHING" || !mqttClient) return;
-            myNickname = getSanitizedNickname();
-            queueMembers.set(myPeerId, { id: myPeerId, nick: myNickname, skin: selectedSkinId, lastSeen: Date.now() });
+        const broadcastPresence = () => {
+          if (gameState !== "MATCHING" || !mqttClient || !mqttClient.connected) return;
+          myNickname = getSanitizedNickname();
+          queueMembers.set(myPeerId, { id: myPeerId, nick: myNickname, skin: selectedSkinId, lastSeen: Date.now() });
+          try {
             mqttClient.publish(topic, JSON.stringify({
               type: "SEEK10",
               id: myPeerId,
@@ -2111,103 +2656,67 @@
               skin: selectedSkinId,
               isHost: mode === "CUSTOM_HOST"
             }));
+          } catch (e) {}
 
-            const now = Date.now();
-            queueMembers.forEach((v, k) => {
-              if (k !== myPeerId && now - v.lastSeen > 6000) queueMembers.delete(k);
+          const now = Date.now();
+          queueMembers.forEach((v, k) => {
+            if (k !== myPeerId && now - v.lastSeen > 6000) queueMembers.delete(k);
+          });
+          updateLobbySlotsUI();
+
+          if (mode === "ONLINE_RANDOM" && queueMembers.size >= 10) {
+            const sortedIds = Array.from(queueMembers.keys()).sort();
+            if (sortedIds[sortedIds.length - 1] === myPeerId) {
+              launchOnline10PRoom();
+            }
+          } else if (mode === "CUSTOM_HOST" && queueMembers.size >= 10) {
+            launchOnline10PRoom();
+          }
+        };
+
+        broadcastPresence();
+        matchLoopTimer = setInterval(broadcastPresence, 1400);
+      });
+
+      mqttClient.on("message", (t, payload) => {
+        if (gameState !== "MATCHING") return;
+        try {
+          const msg = JSON.parse(payload.toString());
+          if (msg.type === "SEEK10" && msg.id && msg.id !== myPeerId) {
+            queueMembers.set(msg.id, {
+              id: msg.id,
+              nick: (msg.nick || "플레이어").slice(0, 10),
+              skin: msg.skin ?? 1,
+              lastSeen: Date.now()
             });
             updateLobbySlotsUI();
-
-            if (mode === "ONLINE_RANDOM") {
-              if (queueMembers.size >= 10) {
-                const sortedIds = Array.from(queueMembers.keys()).sort();
-                if (sortedIds[sortedIds.length - 1] === myPeerId) {
-                  launchOnline10PRoom();
-                }
-              }
-            } else if (mode === "CUSTOM_HOST") {
-              if (queueMembers.size >= 2) {
-                statusEl.textContent = `🏠 방 [${activeRoomCode}]에 ${queueMembers.size}명이 모였습니다! 아래 '지금 시작하기' 버튼으로 바로 시작하세요!`;
-              } else {
-                statusEl.textContent = `🏠 방 [${activeRoomCode}] 대기 중 (${queueMembers.size}/10명) · 친구가 입장하면 '지금 시작하기' 버튼으로 바뀝니다!`;
-              }
-              if (queueMembers.size >= 10) launchOnline10PRoom();
-            } else if (mode === "CUSTOM_GUEST") {
-              statusEl.textContent = `🔑 방 [${activeRoomCode}] 참가 완료 (${queueMembers.size}/10명) · 방장이 '지금 시작하기'를 누를 때까지 대기 중...`;
+            if (peer && !peer.destroyed && myPeerId > msg.id && !peerConns.has(msg.id) && peerConns.size < 9) {
+              const c = peer.connect(msg.id, { reliable: true });
+              attachPeerConn(c);
             }
-          };
-
-          broadcastPresence();
-          matchLoopTimer = setInterval(broadcastPresence, 1400);
-
-          if (mode === "ONLINE_RANDOM") {
-            autoFillTimer = setInterval(() => {
-              if (gameState !== "MATCHING") return;
-              waitSeconds--;
-              statusEl.textContent = `🔍 매칭 중 (${queueMembers.size}/10명) · ${waitSeconds}초 후 빈자리 AI 합류 및 자동 출발!`;
-              if (waitSeconds <= 0) {
-                launchOnline10PRoom();
-              }
-            }, 1000);
+          } else if (msg.type === "START_10P" && mode === "CUSTOM_GUEST") {
+            if (mqttClient) { try { mqttClient.end(true); } catch (e) {} mqttClient = null; }
+            const roster = msg.roster || [];
+            const others = roster.filter(m => m.id !== myPeerId);
+            const fillBots = msg.fillBots !== false;
+            const totalCount = fillBots ? 10 : (1 + others.length);
+            const label = msg.roomCode
+              ? `🏠 방 [${msg.roomCode}] · ${totalCount}명 레이스`
+              : "🌐 10인 실시간 레이스";
+            startMatchSequence(msg.mapIdx, msg.seed, label, others, fillBots);
           }
-        });
-
-        mqttClient.on("message", (t, payload) => {
-          if (gameState !== "MATCHING") return;
-          try {
-            const msg = JSON.parse(payload.toString());
-            if (msg.type === "SEEK10" && msg.id && msg.id !== myPeerId) {
-              queueMembers.set(msg.id, {
-                id: msg.id,
-                nick: (msg.nick || "플레이어").slice(0, 10),
-                skin: msg.skin ?? 1,
-                lastSeen: Date.now()
-              });
-              updateLobbySlotsUI();
-              if (myPeerId > msg.id && !peerConns.has(msg.id) && peerConns.size < 9) {
-                const c = peer.connect(msg.id, { reliable: true });
-                attachPeerConn(c);
-              }
-            } else if (msg.type === "START_10P" && mode === "CUSTOM_GUEST") {
-              if (mqttClient) { try { mqttClient.end(true); } catch (e) {} mqttClient = null; }
-              const roster = msg.roster || [];
-              const others = roster.filter(m => m.id !== myPeerId);
-              const fillBots = msg.fillBots !== false;
-              const totalCount = fillBots ? 10 : (1 + others.length);
-              const label = msg.roomCode
-                ? `🏠 방 [${msg.roomCode}] · ${totalCount}명 레이스`
-                : "🌐 10인 실시간 레이스";
-              startMatchSequence(msg.mapIdx, msg.seed, label, others, fillBots);
-            }
-          } catch (e) {}
-        });
-
-        mqttClient.on("error", () => {
-          if (gameState === "MATCHING") {
-            statusEl.textContent = "⚠️ 소켓 연결이 차단된 환경입니다. 'AI 봇 9명과 연습'을 눌러 플레이하세요!";
-          }
-        });
-      });
-
-      peer.on("connection", (incoming) => {
-        if (gameState !== "MATCHING" || peerConns.size >= 9) {
-          incoming.close();
-          return;
-        }
-        attachPeerConn(incoming);
-      });
-
-      peer.on("error", () => {
-        if (gameState === "MATCHING") {
-          statusEl.textContent = "⚠️ 외부 연결이 제한된 환경입니다. 'AI 봇 9명과 연습'을 눌러 플레이하세요!";
-        }
+        } catch (e) {}
       });
     }
 
     function attachPeerConn(c) {
+      if (!c || !c.peer) return;
       peerConns.set(c.peer, c);
+      c.on("error", () => {});
       c.on("open", () => {
-        c.send({ type: "HELLO10", id: myPeerId, nick: myNickname, skin: selectedSkinId });
+        try {
+          c.send({ type: "HELLO10", id: myPeerId, nick: myNickname, skin: selectedSkinId });
+        } catch (e) {}
         if (!syncInterval) {
           syncInterval = setInterval(() => {
             if (gameState === "RACING" || gameState === "COUNTDOWN") {
@@ -2225,7 +2734,9 @@
                 finishTime: player.finishTime
               };
               peerConns.forEach(connItem => {
-                if (connItem.open) connItem.send(packet);
+                try {
+                  if (connItem.open) connItem.send(packet);
+                } catch (e) {}
               });
             }
           }, 55);
@@ -2261,7 +2772,13 @@
             targetRacer.targetX = data.x;
             targetRacer.targetY = data.y;
             targetRacer.facing = data.facing || 1;
-            if (typeof data.grounded === "boolean") targetRacer.grounded = data.grounded;
+            if (typeof data.grounded === "boolean") {
+              if (targetRacer.prevGrounded && !data.grounded) {
+                spawnJumpBurst(targetRacer.x + targetRacer.w * 0.5, targetRacer.y + targetRacer.h, targetRacer.skinId, false);
+              }
+              targetRacer.prevGrounded = data.grounded;
+              targetRacer.grounded = data.grounded;
+            }
             if (typeof data.dashing === "boolean") targetRacer.dashing = data.dashing;
             targetRacer.progress = data.progress || 0;
             if (data.finished && !targetRacer.finished) {
@@ -2317,11 +2834,30 @@
     }
 
     function finishRace() {
+      if (raceRewardClaimed || gameState === "FINISHED") return;
+      raceRewardClaimed = true;
       gameState = "FINISHED";
       resetInputs();
       const standings = computeStandings();
       const myRank = standings.findIndex(s => s.isMe) + 1;
       const totalCount = standings.length;
+
+      const rewardBannerEl = document.getElementById("result-reward-banner");
+      if (myRank >= 1 && myRank <= 3) {
+        playerGold += TOP3_REWARD_GOLD;
+        saveEconomyState();
+        SoundEngine.playCoin();
+        if (rewardBannerEl) {
+          rewardBannerEl.className = "reward-banner earned";
+          rewardBannerEl.textContent = `🎉 3위 이내 입상 보상: +${TOP3_REWARD_GOLD}G 지급! (보유: ${playerGold}G)`;
+        }
+      } else {
+        updateGoldDisplays();
+        if (rewardBannerEl) {
+          rewardBannerEl.className = "reward-banner";
+          rewardBannerEl.textContent = `아쉽네요! 3위 안에 들면 ${TOP3_REWARD_GOLD}G를 획득합니다.`;
+        }
+      }
 
       document.getElementById("result-icon").textContent = myRank === 1 ? "🏆" : (myRank <= 3 ? "🥈" : "🏁");
       document.getElementById("result-title").textContent = `${myNickname} · ${myRank}위 완주!`;
@@ -2376,6 +2912,7 @@
 
     function updatePhysics(dt, timeSec) {
       animClock = timeSec;
+      updateBackTrailParticles(dt);
 
       for (const p of currentCourse.platforms) {
         if (p.moveX !== 0) p.x = p.baseX + Math.sin(timeSec * p.speed) * p.moveX;
@@ -2410,7 +2947,18 @@
       const speedAbs = Math.abs(player.vx);
       if (speedAbs > 18) {
         player.walkPhase += dt * (8 + speedAbs * 0.032);
+        const isDashing = player.dashActiveTimer > 0;
+        const moveDirX = player.vx >= 0 ? 1 : -1;
+        const spawnRate = isDashing ? 55 : (24 + speedAbs * 0.05);
+        backTrailSpawnAcc += dt * spawnRate;
+        const backX = (player.x + player.w * 0.5) - moveDirX * 13;
+        const backY = player.y + player.h * 0.44;
+        while (backTrailSpawnAcc >= 1) {
+          backTrailSpawnAcc -= 1;
+          spawnBackTrailParticle(backX, backY, -moveDirX, selectedSkinId, isDashing);
+        }
       } else {
+        backTrailSpawnAcc = 0;
         const tau = Math.PI * 2;
         const mod = ((player.walkPhase % tau) + tau) % tau;
         const nearestZero = mod > Math.PI ? tau : 0;
@@ -2451,6 +2999,7 @@
         ) {
           player.vy = -960;
           player.grounded = false;
+          spawnJumpBurst(player.x + player.w * 0.5, s.y, selectedSkinId, true);
           SoundEngine.playSuperJump();
           triggerVibration([45, 25, 65]);
         }
@@ -2490,6 +3039,15 @@
             r.x += r.baseSpeed * dt;
             r.facing = 1;
             r.walkPhase += dt * 16.5;
+            const prevAcc = racerTrailSpawnAcc.get(r.id) || 0;
+            let nextAcc = prevAcc + dt * 28;
+            const backX = (r.x + r.w * 0.5) - r.facing * 13;
+            const backY = r.y + r.h * 0.44;
+            while (nextAcc >= 1) {
+              nextAcc -= 1;
+              spawnBackTrailParticle(backX, backY, -r.facing, r.skinId, false);
+            }
+            racerTrailSpawnAcc.set(r.id, nextAcc);
             let supportPlat = currentCourse.platforms[0];
             for (const p of currentCourse.platforms) {
               if (r.x + 15 >= p.x - 45 && r.x <= p.x + p.w + 45) {
@@ -2498,7 +3056,12 @@
             }
             const jumpOffset = Math.abs(Math.sin(timeSec * 5 + r.jumpPhase)) * 52;
             const desiredY = supportPlat.y - r.h - jumpOffset;
-            r.grounded = jumpOffset < 4;
+            const nowGrounded = jumpOffset < 4;
+            if (r.prevGrounded && !nowGrounded) {
+              spawnJumpBurst(r.x + r.w * 0.5, supportPlat.y, r.skinId, false);
+            }
+            r.prevGrounded = nowGrounded;
+            r.grounded = nowGrounded;
             r.y += (desiredY - r.y) * Math.min(1, dt * 8);
             r.progress = getProgress(r.x);
 
@@ -2510,8 +3073,21 @@
         } else {
           const dx = r.targetX - r.x;
           const dy = r.targetY - r.y;
-          if (Math.hypot(dx, dy) > 2) {
+          const distDelta = Math.hypot(dx, dy);
+          if (distDelta > 1.5) {
             r.walkPhase += dt * 15;
+            const moveDirX = Math.abs(dx) > 0.5 ? (dx >= 0 ? 1 : -1) : (r.facing >= 0 ? 1 : -1);
+            const prevAcc = racerTrailSpawnAcc.get(r.id) || 0;
+            let nextAcc = prevAcc + dt * (r.dashing ? 52 : 28);
+            const backX = (r.x + r.w * 0.5) - moveDirX * 13;
+            const backY = r.y + r.h * 0.44;
+            while (nextAcc >= 1) {
+              nextAcc -= 1;
+              spawnBackTrailParticle(backX, backY, -moveDirX, r.skinId, !!r.dashing);
+            }
+            racerTrailSpawnAcc.set(r.id, nextAcc);
+          } else {
+            racerTrailSpawnAcc.set(r.id, 0);
           }
           r.x += dx * Math.min(1, dt * 16);
           r.y += dy * Math.min(1, dt * 16);
@@ -2534,21 +3110,23 @@
         player.finished = true;
         player.finishTime = elapsedTime;
         peerConns.forEach(c => {
-          if (c.open) {
-            c.send({
-              type: "POS10",
-              id: myPeerId,
-              nick: myNickname,
-              x: Math.round(player.x),
-              y: Math.round(player.y),
-              facing: player.facing,
-              grounded: player.grounded,
-              dashing: false,
-              progress: 100,
-              finished: true,
-              finishTime: elapsedTime
-            });
-          }
+          try {
+            if (c.open) {
+              c.send({
+                type: "POS10",
+                id: myPeerId,
+                nick: myNickname,
+                x: Math.round(player.x),
+                y: Math.round(player.y),
+                facing: player.facing,
+                grounded: player.grounded,
+                dashing: false,
+                progress: 100,
+                finished: true,
+                finishTime: elapsedTime
+              });
+            }
+          } catch (e) {}
         });
         finishRace();
       }
@@ -2630,10 +3208,8 @@
 
       const hipY = 12.5;
 
-      // 1. 뒷다리
       drawLeg(-3.5, hipY, leftAngle, leftLift, legLen, footLen, skin.accent, skin.body, true);
 
-      // 2. 우측(전방) 돌출 확장 파츠
       ctx.fillStyle = skin.accent;
       ctx.strokeStyle = "#ffffff";
       ctx.lineWidth = 2;
@@ -2649,7 +3225,6 @@
       ctx.fill();
       ctx.stroke();
 
-      // 3. 하단 각진 베이스/토르소 블록
       ctx.fillStyle = skin.band;
       ctx.beginPath();
       ctx.moveTo(-12, 0);
@@ -2661,7 +3236,6 @@
       ctx.fill();
       ctx.stroke();
 
-      // 4. 중앙 힌지/관절 링
       ctx.fillStyle = skin.accent;
       ctx.beginPath();
       ctx.arc(-1, -1, 5.8, 0, Math.PI * 2);
@@ -2673,7 +3247,6 @@
       ctx.arc(-1, -1, 2.2, 0, Math.PI * 2);
       ctx.fill();
 
-      // 5. 상단 박스형 헤드/바디 블록 + 원형 눈
       ctx.fillStyle = skin.body;
       drawRoundRect(ctx, -13, -21, 22, 16.5, 4);
       ctx.fill();
@@ -2687,12 +3260,10 @@
       ctx.lineWidth = 1.3;
       ctx.stroke();
 
-      // 6. 앞다리
       drawLeg(3.2, hipY, rightAngle, rightLift, legLen, footLen, skin.body, skin.band, false);
 
       ctx.restore();
 
-      // 닉네임 라벨
       ctx.save();
       if (isGhost) ctx.globalAlpha = 0.85;
       ctx.font = "bold 11px sans-serif";
@@ -2783,6 +3354,8 @@
       ctx.font = "bold 11px sans-serif";
       ctx.fillText("GOAL", g.x + 12, g.y + 18);
 
+      renderBackTrailParticles();
+
       for (const r of racers) {
         drawCharacter(r.x, r.y, r.w, r.h, r.facing, r.skinId, r.name, true, {
           walkPhase: r.walkPhase || (animClock * 12),
@@ -2860,15 +3433,7 @@
     document.getElementById("btn-fill-now").addEventListener("click", launchOnline10PRoom);
 
     document.getElementById("btn-exit-match").addEventListener("click", () => {
-      cleanupNetwork();
-      resetInputs();
-      gameState = "LOBBY";
-      publishLobbyPresence();
-      renderFriendsList();
-      document.getElementById("countdown-overlay").classList.add("hidden");
-      document.getElementById("result-screen").classList.add("hidden");
-      document.getElementById("lobby-screen").classList.remove("hidden");
-      document.getElementById("match-status").textContent = "친구를 눌러 바로 방에 초대하거나, 방 만들기 / 10인 매치를 선택하세요!";
+      transitionToLobby();
     });
 
     document.getElementById("btn-rematch").addEventListener("click", () => {
@@ -2878,14 +3443,7 @@
     });
 
     document.getElementById("btn-result-lobby").addEventListener("click", () => {
-      cleanupNetwork();
-      resetInputs();
-      gameState = "LOBBY";
-      publishLobbyPresence();
-      renderFriendsList();
-      document.getElementById("result-screen").classList.add("hidden");
-      document.getElementById("lobby-screen").classList.remove("hidden");
-      document.getElementById("match-status").textContent = "친구를 눌러 바로 방에 초대하거나, 방 만들기 / 10인 매치를 선택하세요!";
+      transitionToLobby();
     });
 
     initPersistentLobbyPresence();
