@@ -16,21 +16,25 @@
       -webkit-touch-callout: none;
       -webkit-tap-highlight-color: transparent;
     }
+
     html, body {
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #0f172a;
+      background: #020617;
       color: #f8fafc;
       font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       touch-action: none;
       overscroll-behavior: none;
     }
+
     #game-wrapper {
       position: relative;
       width: 100%;
       height: 100%;
+      overflow: hidden;
     }
+
     canvas#gameCanvas {
       display: block;
       width: 100%;
@@ -38,7 +42,12 @@
       touch-action: none;
     }
 
-    /* 가로 회전 안내 (소형 세로 화면) */
+    .hidden {
+      display: none !important;
+      pointer-events: none !important;
+    }
+
+    /* 가로 회전 안내 (초소형 세로 화면만 표시) */
     #rotate-notice {
       display: none;
       position: fixed;
@@ -51,8 +60,9 @@
       justify-content: center;
       text-align: center;
       padding: 24px;
+      pointer-events: none;
     }
-    @media (orientation: portrait) and (max-width: 720px) and (max-height: 620px) {
+    @media (orientation: portrait) and (max-width: 560px) and (max-height: 480px) {
       #rotate-notice { display: flex; }
     }
 
@@ -62,7 +72,7 @@
       top: 10px;
       left: 12px;
       right: 12px;
-      z-index: 20;
+      z-index: 25;
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -92,6 +102,8 @@
       font-weight: 900;
     }
     #btn-exit-match {
+      position: relative;
+      z-index: 26;
       pointer-events: auto;
       background: rgba(239, 68, 68, 0.92);
       color: #fff;
@@ -103,6 +115,8 @@
       cursor: pointer;
     }
     .sound-toggle-btn {
+      position: relative;
+      z-index: 26;
       pointer-events: auto;
       background: rgba(30, 41, 59, 0.92);
       color: #f8fafc;
@@ -121,6 +135,28 @@
       background: rgba(15, 23, 42, 0.85);
       border-color: #64748b;
       color: #94a3b8;
+    }
+    .wide-view-btn {
+      position: relative;
+      z-index: 26;
+      pointer-events: auto;
+      background: rgba(14, 165, 233, 0.22);
+      color: #7dd3fc;
+      border: 1px solid rgba(56, 189, 248, 0.65);
+      border-radius: 8px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.08s, background 0.15s, border-color 0.15s;
+    }
+    .wide-view-btn:active {
+      transform: scale(0.94);
+    }
+    .wide-view-btn.active {
+      background: rgba(16, 185, 129, 0.28);
+      color: #6ee7b7;
+      border-color: #34d399;
     }
     .progress-track {
       position: relative;
@@ -188,10 +224,8 @@
       display: flex;
       flex-direction: column;
       gap: 9px;
+      pointer-events: auto;
       animation: slideDownInvite 0.24s ease-out;
-    }
-    #invite-toast.hidden {
-      display: none !important;
     }
     @keyframes slideDownInvite {
       from { opacity: 0; transform: translate(-50%, -22px); }
@@ -233,6 +267,7 @@
       font-size: 13px;
       font-weight: 900;
       cursor: pointer;
+      pointer-events: auto;
       transition: transform 0.08s;
     }
     .invite-btn:active { transform: scale(0.96); }
@@ -264,8 +299,8 @@
     .overlay-screen {
       position: fixed;
       inset: 0;
-      z-index: 50;
-      background: rgba(2, 6, 23, 0.86);
+      z-index: 60;
+      background: rgba(2, 6, 23, 0.88);
       backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
@@ -273,12 +308,10 @@
       padding: 12px;
       pointer-events: auto;
     }
-    .overlay-screen.hidden {
-      display: none !important;
-      pointer-events: none !important;
-    }
 
     .panel {
+      position: relative;
+      z-index: 62;
       width: 100%;
       max-width: 760px;
       max-height: 94vh;
@@ -289,6 +322,7 @@
       padding: 14px 18px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
       touch-action: pan-y;
+      pointer-events: auto;
     }
     .title {
       font-size: 21px;
@@ -329,6 +363,7 @@
     #nickname-input {
       -webkit-user-select: text;
       user-select: text;
+      pointer-events: auto;
       flex: 1;
       max-width: 210px;
       padding: 7px 10px;
@@ -395,6 +430,7 @@
       white-space: nowrap;
       flex-shrink: 0;
       cursor: pointer;
+      pointer-events: auto;
       transition: transform 0.1s, border-color 0.15s, background 0.15s;
     }
     .friend-chip:hover {
@@ -447,6 +483,7 @@
       font-size: 10px;
       font-weight: 900;
       cursor: pointer;
+      pointer-events: auto;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -484,6 +521,7 @@
       align-items: center;
       gap: 3px;
       cursor: pointer;
+      pointer-events: auto;
       transition: transform 0.1s, border-color 0.15s;
     }
     .skin-card.active {
@@ -492,13 +530,13 @@
       transform: scale(1.03);
     }
     .skin-card.locked {
-      opacity: 0.76;
+      opacity: 0.82;
       border-color: #334155;
       background: #090d16;
     }
     .skin-card.locked:hover {
       border-color: #facc15;
-      opacity: 0.94;
+      opacity: 0.98;
     }
     .skin-card.rainbow-tier {
       border-color: rgba(236, 72, 153, 0.55);
@@ -554,18 +592,18 @@
     #skin-buy-modal {
       position: fixed;
       inset: 0;
-      z-index: 130;
+      z-index: 140;
       background: rgba(2, 6, 23, 0.82);
       backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 16px;
-    }
-    #skin-buy-modal.hidden {
-      display: none !important;
+      pointer-events: auto;
     }
     .buy-modal-card {
+      position: relative;
+      z-index: 142;
       background: #1e293b;
       border: 2px solid #facc15;
       border-radius: 16px;
@@ -574,6 +612,7 @@
       max-width: 340px;
       text-align: center;
       box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8);
+      pointer-events: auto;
     }
     .skin-preview {
       width: 32px;
@@ -624,6 +663,7 @@
     #room-code-input {
       -webkit-user-select: text;
       user-select: text;
+      pointer-events: auto;
       width: 115px;
       padding: 8px 10px;
       border-radius: 9px;
@@ -648,6 +688,8 @@
       flex-wrap: wrap;
     }
     .main-btn {
+      position: relative;
+      z-index: 64;
       flex: 1;
       min-width: 150px;
       padding: 10px 14px;
@@ -656,6 +698,7 @@
       font-size: 13px;
       font-weight: 800;
       cursor: pointer;
+      pointer-events: auto;
       color: #fff;
       transition: transform 0.08s, background 0.2s, box-shadow 0.2s;
     }
@@ -691,7 +734,6 @@
       box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
       border: 1.5px solid #6ee7b7;
     }
-    .btn-instant.hidden { display: none !important; }
 
     /* 방 코드 배너 */
     #room-banner {
@@ -705,7 +747,6 @@
       justify-content: space-between;
       gap: 8px;
     }
-    #room-banner.hidden { display: none !important; }
     .code-display {
       font-size: 20px;
       font-weight: 900;
@@ -713,6 +754,8 @@
       color: #fde047;
     }
     .copy-btn {
+      position: relative;
+      z-index: 64;
       background: #f59e0b;
       color: #0f172a;
       border: none;
@@ -721,6 +764,7 @@
       font-size: 12px;
       font-weight: 800;
       cursor: pointer;
+      pointer-events: auto;
     }
 
     #match-status {
@@ -739,7 +783,6 @@
       gap: 6px;
       margin-top: 8px;
     }
-    #lobby-slots.hidden { display: none !important; }
     .slot-chip {
       background: #0f172a;
       border: 1px solid #334155;
@@ -809,6 +852,7 @@
       font-weight: 900;
       line-height: 1;
       cursor: pointer;
+      pointer-events: auto;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -831,15 +875,43 @@
       inset: 0;
       z-index: 45;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 14px;
       font-size: 76px;
       font-weight: 900;
       color: #fff;
       text-shadow: 0 6px 24px rgba(0, 0, 0, 0.8);
       pointer-events: none;
     }
-    #countdown-overlay.hidden { display: none !important; }
+    #countdown-number {
+      pointer-events: none;
+    }
+    #btn-wide-view {
+      position: relative;
+      z-index: 46;
+      pointer-events: auto;
+      background: rgba(15, 23, 42, 0.92);
+      color: #7dd3fc;
+      border: 2px solid #38bdf8;
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      text-shadow: none;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      transition: transform 0.08s, background 0.15s, border-color 0.15s;
+    }
+    #btn-wide-view:active {
+      transform: scale(0.95);
+    }
+    #btn-wide-view.active {
+      background: rgba(16, 185, 129, 0.32);
+      color: #6ee7b7;
+      border-color: #34d399;
+    }
 
     /* 모바일 터치 컨트롤러 */
     #touch-controls {
@@ -848,7 +920,7 @@
       right: 0;
       bottom: 0;
       height: 145px;
-      z-index: 35;
+      z-index: 30;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
@@ -922,7 +994,7 @@
   </div>
 
   <!-- 실시간 친구 방 초대 수신 팝업 배너 -->
-  <div id="invite-toast" class="hidden" role="dialog" aria-live="polite">
+  <div id="invite-toast" class="hidden" role="dialog" aria-live="polite" style="display:none;">
     <div class="invite-header-row">
       <div class="invite-sender-info">
         <span id="invite-sender-dot" class="friend-skin-dot" style="width:18px;height:18px;"></span>
@@ -950,6 +1022,7 @@
         <div class="hud-badge" id="hud-timer">⏱️ 00.00s</div>
         <div class="hud-badge" id="hud-mode">파쿠르 레이스</div>
         <div style="display:flex;gap:6px;align-items:center;pointer-events:auto;">
+          <button id="btn-wide-hud" class="wide-view-btn" type="button" title="레이스 카메라 시야 넓게/기본 전환">🔭 시야 넓게</button>
           <button id="btn-sound-hud" class="sound-toggle-btn" type="button" title="배경음 및 효과음 켜기/끄기">🔊 소리 ON</button>
           <button id="btn-exit-match" type="button">로비로</button>
         </div>
@@ -961,7 +1034,10 @@
     </div>
 
     <!-- 카운트다운 -->
-    <div id="countdown-overlay" class="hidden">3</div>
+    <div id="countdown-overlay" class="hidden" style="display:none;">
+      <div id="countdown-number">3</div>
+      <button id="btn-wide-view" type="button" title="카운트다운 중 카메라 시야 넓게/기본 전환">🔭 시야 넓게</button>
+    </div>
 
     <!-- 모바일 & 마우스 터치 컨트롤 -->
     <div id="touch-controls">
@@ -979,7 +1055,7 @@
     </div>
 
     <!-- 메인 로비 -->
-    <div id="lobby-screen" class="overlay-screen">
+    <div id="lobby-screen" class="overlay-screen" style="display:flex;">
       <div class="panel">
         <div class="title">PARKOUR RUSH 10P</div>
         <div class="subtitle">친구 클릭 즉시 초대 &amp; 수락 자동 입장 · 방 인원끼리 바로 시작 · 10인 랜덤 매치</div>
@@ -1029,7 +1105,7 @@
         </div>
 
         <!-- 방 생성/입장 후 코드 표시 배너 -->
-        <div id="room-banner" class="hidden">
+        <div id="room-banner" class="hidden" style="display:none;">
           <div>
             <div style="font-size:11px;color:#cbd5e1;">현재 대기 중인 5자리 방 코드 (친구 클릭 시 자동 초대됨)</div>
             <div class="code-display" id="active-room-code">-----</div>
@@ -1037,15 +1113,15 @@
           <button type="button" class="copy-btn" id="btn-copy-code">📋 코드 복사</button>
         </div>
 
-        <button type="button" class="main-btn btn-instant hidden" id="btn-fill-now">🚀 지금 출발하기 (빈자리 AI 합류로 10명 시작)</button>
+        <button type="button" class="main-btn btn-instant hidden" id="btn-fill-now" style="display:none;">🚀 지금 출발하기 (빈자리 AI 합류로 10명 시작)</button>
 
         <div id="match-status">친구를 눌러 바로 방에 초대하거나, 방 만들기 / 10인 매치를 선택하세요!</div>
-        <div id="lobby-slots" class="hidden"></div>
+        <div id="lobby-slots" class="hidden" style="display:none;"></div>
       </div>
     </div>
 
     <!-- 결과 화면 -->
-    <div id="result-screen" class="overlay-screen hidden">
+    <div id="result-screen" class="overlay-screen hidden" style="display:none;">
       <div class="panel" style="max-width:500px;text-align:center;">
         <div style="display:flex;justify-content:flex-end;margin-bottom:2px;">
           <span class="gold-badge" id="result-gold-display">💰 100G</span>
@@ -1063,7 +1139,7 @@
     </div>
 
     <!-- 스킨 구매 확인 모달 -->
-    <div id="skin-buy-modal" class="hidden" role="dialog" aria-modal="true">
+    <div id="skin-buy-modal" class="hidden" role="dialog" aria-modal="true" style="display:none;">
       <div class="buy-modal-card">
         <div style="font-size:32px;margin-bottom:6px;">🛍️</div>
         <div id="buy-modal-title" style="font-size:17px;font-weight:900;color:#f8fafc;margin-bottom:6px;">스킨 구매</div>
@@ -1080,24 +1156,27 @@
 
   <script>
     // ==========================================
-    // 0-A. 안전한 스토리지, 진동 & 캔버스 헬퍼
+    // 0-A. 안전한 스토리지, 진동 & 캔버스 둥근 사각형 헬퍼
     // ==========================================
-    const memoryStorageFallback = new Map();
+    const memoryStorage = new Map();
 
-    function safeGetStorage(key, fallback = "") {
+    function safeGetStorage(key, fallback = null) {
       try {
-        const val = window.localStorage.getItem(key);
-        return val !== null ? val : fallback;
-      } catch (e) {
-        return memoryStorageFallback.has(key) ? memoryStorageFallback.get(key) : fallback;
-      }
+        if (window.localStorage) {
+          const val = window.localStorage.getItem(key);
+          if (val !== null) return val;
+        }
+      } catch (e) {}
+      return memoryStorage.has(key) ? memoryStorage.get(key) : fallback;
     }
 
     function safeSetStorage(key, value) {
       const strVal = String(value);
-      memoryStorageFallback.set(key, strVal);
+      memoryStorage.set(key, strVal);
       try {
-        window.localStorage.setItem(key, strVal);
+        if (window.localStorage) {
+          window.localStorage.setItem(key, strVal);
+        }
       } catch (e) {}
     }
 
@@ -1110,6 +1189,7 @@
     }
 
     function drawRoundRect(context, x, y, w, h, r) {
+      if (!context) return;
       const radius = Math.max(0, Math.min(r, Math.abs(w) * 0.5, Math.abs(h) * 0.5));
       context.beginPath();
       if (typeof context.roundRect === "function") {
@@ -1128,12 +1208,16 @@
       context.closePath();
     }
 
+    // 전역 레이스 상태 (BGM 엔진과 공유)
+    let gameState = "LOBBY";
+    let activeRoomCode = "";
+
     // ==========================================
     // 0-B. Web Audio API 배경음(BGM) & 효과음(SFX) 엔진
     // ==========================================
     const SoundEngine = (() => {
       let audioCtx = null;
-      let isMuted = safeGetStorage("parkour_sound_muted", "0") === "1";
+      let isMuted = safeGetStorage("parkour_sound_muted") === "1";
       let bgmTimer = null;
       let bgmStep = 0;
 
@@ -1211,7 +1295,7 @@
 
         const now = ac.currentTime;
         const idx = bgmStep % MELODY_NOTES.length;
-        const isRacing = typeof gameState !== "undefined" && gameState === "RACING";
+        const isRacing = gameState === "RACING";
         const melVol = isRacing ? 0.045 : 0.028;
         const bassVol = isRacing ? 0.055 : 0.032;
 
@@ -1279,8 +1363,8 @@
         const ac = ensureContext();
         if (!ac || isMuted) return;
         const now = ac.currentTime;
-        playTone(987.77, "square", 0.09, now, 0.075);
-        playTone(1318.51, "triangle", 0.22, now + 0.08, 0.09);
+        playTone(987.77, "triangle", 0.10, now, 0.09);
+        playTone(1318.51, "sine", 0.22, now + 0.08, 0.10);
       }
 
       return {
@@ -1294,101 +1378,157 @@
       };
     })();
 
-    SoundEngine.updateToggleButtonsUI();
-    document.getElementById("btn-sound-hud").addEventListener("click", () => SoundEngine.toggleMute());
-    document.getElementById("btn-sound-lobby").addEventListener("click", () => SoundEngine.toggleMute());
-
-    ["pointerdown", "touchstart", "keydown"].forEach(evtName => {
-      window.addEventListener(evtName, () => SoundEngine.unlockAndStart(), { passive: true });
-    });
-
     // ==========================================
-    // 1. 10가지 캐릭터 스킨 & 골드(G) 경제 시스템
+    // 1. 10가지 캐릭터 스킨 데이터 & 골드 상점
     // ==========================================
-    const RAINBOW_COLORS = ["#f43f5e", "#fb923c", "#facc15", "#4ade80", "#38bdf8", "#a855f7", "#ec4899"];
+    const INITIAL_GOLD = 100;
+    const TOP3_REWARD_GOLD = 50;
+    const STANDARD_SKIN_PRICE = 100;
+    const RAINBOW_SKIN_PRICE = 150;
+    const RAINBOW_COLORS = ["#ef4444", "#f97316", "#facc15", "#22c55e", "#38bdf8", "#818cf8", "#ec4899"];
 
     const SKINS = [
-      { id: 0, name: "기본 러너", price: 0, body: "#38bdf8", accent: "#0284c7", eye: "#ffffff", band: "#facc15" },
-      { id: 1, name: "네온 사이버", price: 100, body: "#a855f7", accent: "#6b21a8", eye: "#22d3ee", band: "#f472b6" },
-      { id: 2, name: "파이어 닌자", price: 100, body: "#ef4444", accent: "#991b1b", eye: "#fef08a", band: "#1e293b" },
-      { id: 3, name: "골드 챔피언", price: 100, body: "#f59e0b", accent: "#b45309", eye: "#ffffff", band: "#fef3c7" },
-      { id: 4, name: "우주인", price: 100, body: "#f8fafc", accent: "#94a3b8", eye: "#38bdf8", band: "#0f172a" },
-      { id: 5, name: "고릴라 파워", price: 100, body: "#475569", accent: "#1e293b", eye: "#fbbf24", band: "#a3e635" },
-      { id: 6, name: "아이스 슬라임", price: 100, body: "#67e8f9", accent: "#06b6d4", eye: "#0f172a", band: "#ffffff" },
-      { id: 7, name: "다크 팬텀", price: 100, body: "#1e1b4b", accent: "#090d16", eye: "#f43f5e", band: "#818cf8" },
-      { id: 8, name: "개구리 점퍼", price: 100, body: "#4ade80", accent: "#15803d", eye: "#fef08a", band: "#fb7185" },
-      { id: 9, name: "레인보우 큐브", price: 150, isRainbow: true, body: "#ec4899", accent: "#8b5cf6", eye: "#ffffff", band: "#34d399" }
+      { id: 0, name: "기본 러너", body: "#38bdf8", accent: "#0284c7", eye: "#ffffff", band: "#facc15", price: 0 },
+      { id: 1, name: "네온 사이버", body: "#a855f7", accent: "#6b21a8", eye: "#22d3ee", band: "#f472b6", price: 100 },
+      { id: 2, name: "파이어 닌자", body: "#ef4444", accent: "#991b1b", eye: "#fef08a", band: "#1e293b", price: 100 },
+      { id: 3, name: "골드 챔피언", body: "#f59e0b", accent: "#b45309", eye: "#ffffff", band: "#fef3c7", price: 100 },
+      { id: 4, name: "우주인", body: "#f8fafc", accent: "#94a3b8", eye: "#38bdf8", band: "#0f172a", price: 100 },
+      { id: 5, name: "고릴라 파워", body: "#475569", accent: "#1e293b", eye: "#fbbf24", band: "#a3e635", price: 100 },
+      { id: 6, name: "아이스 슬라임", body: "#67e8f9", accent: "#06b6d4", eye: "#0f172a", band: "#ffffff", price: 100 },
+      { id: 7, name: "다크 팬텀", body: "#1e1b4b", accent: "#090d16", eye: "#f43f5e", band: "#818cf8", price: 100 },
+      { id: 8, name: "개구리 점퍼", body: "#4ade80", accent: "#15803d", eye: "#fef08a", band: "#fb7185", price: 100 },
+      { id: 9, name: "레인보우 큐브", body: "#ec4899", accent: "#8b5cf6", eye: "#ffffff", band: "#34d399", price: 150, isRainbow: true }
     ];
-
-    const TOP3_REWARD_GOLD = 50;
-    const INITIAL_GOLD = 100;
-
-    function getSkinPrice(skin) {
-      if (!skin || skin.id === 0) return 0;
-      return typeof skin.price === "number" ? skin.price : 100;
-    }
 
     function pickSkinTrailColor(skinId, indexHint = 0) {
       const skin = SKINS[skinId] || SKINS[0];
       if (skin.isRainbow) {
-        const idx = (Math.floor(Math.random() * RAINBOW_COLORS.length) + indexHint) % RAINBOW_COLORS.length;
-        return RAINBOW_COLORS[idx];
+        const phase = Math.floor(performance.now() / 65) + indexHint + Math.floor(Math.random() * RAINBOW_COLORS.length);
+        return RAINBOW_COLORS[Math.abs(phase) % RAINBOW_COLORS.length];
       }
-      const roll = Math.random();
-      if (roll < 0.65) return skin.body;
-      if (roll < 0.88) return skin.band;
+      const r = Math.random();
+      if (r < 0.68) return skin.body;
+      if (r < 0.88) return skin.band;
       return skin.eye;
     }
 
-    const rawSavedGold = safeGetStorage("parkour_gold", null);
-    const parsedSavedGold = rawSavedGold !== null ? Number(rawSavedGold) : NaN;
-    let playerGold = rawSavedGold === null
-      ? INITIAL_GOLD
-      : (Number.isFinite(parsedSavedGold) ? Math.max(0, Math.floor(parsedSavedGold)) : INITIAL_GOLD);
+    function getSkinPrice(skin) {
+      if (!skin || skin.id === 0) return 0;
+      return skin.isRainbow ? RAINBOW_SKIN_PRICE : STANDARD_SKIN_PRICE;
+    }
 
-    let unlockedSkins = [0];
+    const rawSavedGold = safeGetStorage("parkour_gold");
+    const parsedGold = Number(rawSavedGold);
+    let playerGold = (rawSavedGold !== null && Number.isFinite(parsedGold) && parsedGold >= 0)
+      ? Math.floor(parsedGold)
+      : INITIAL_GOLD;
+    if (rawSavedGold === null) {
+      safeSetStorage("parkour_gold", String(INITIAL_GOLD));
+    }
+
+    let ownedSkinIds = [0];
     try {
-      const savedUnlocked = JSON.parse(safeGetStorage("parkour_unlocked_skins", "[0]"));
-      if (Array.isArray(savedUnlocked)) {
-        unlockedSkins = Array.from(new Set([0, ...savedUnlocked.map(Number).filter(n => Boolean(SKINS[n]))]));
+      const savedOwned = JSON.parse(safeGetStorage("parkour_owned_skins", "[0]"));
+      if (Array.isArray(savedOwned)) {
+        const validOwned = savedOwned.map(Number).filter(id => Number.isInteger(id) && id >= 0 && id < SKINS.length);
+        if (!validOwned.includes(0)) validOwned.unshift(0);
+        ownedSkinIds = Array.from(new Set(validOwned));
       }
     } catch (e) {
-      unlockedSkins = [0];
-    }
-
-    function updateGoldDisplays() {
-      const lobbyGoldEl = document.getElementById("lobby-gold-display");
-      const resultGoldEl = document.getElementById("result-gold-display");
-      if (lobbyGoldEl) lobbyGoldEl.textContent = `💰 ${playerGold}G`;
-      if (resultGoldEl) resultGoldEl.textContent = `💰 ${playerGold}G`;
-    }
-
-    function saveEconomyState() {
-      safeSetStorage("parkour_gold", String(playerGold));
-      safeSetStorage("parkour_unlocked_skins", JSON.stringify(unlockedSkins));
-      updateGoldDisplays();
+      ownedSkinIds = [0];
     }
 
     let selectedSkinId = Number(safeGetStorage("parkour_skin_id", "0"));
-    if (!SKINS[selectedSkinId] || !unlockedSkins.includes(selectedSkinId)) {
+    if (!SKINS[selectedSkinId] || !ownedSkinIds.includes(selectedSkinId)) {
       selectedSkinId = 0;
       safeSetStorage("parkour_skin_id", "0");
     }
-    saveEconomyState();
+
+    let pendingBuySkinId = null;
+
+    function saveEconomyState() {
+      safeSetStorage("parkour_gold", String(playerGold));
+      safeSetStorage("parkour_owned_skins", JSON.stringify(ownedSkinIds));
+      safeSetStorage("parkour_skin_id", String(selectedSkinId));
+      updateGoldDisplays();
+    }
+
+    function updateGoldDisplays() {
+      const lobbyGold = document.getElementById("lobby-gold-display");
+      const resultGold = document.getElementById("result-gold-display");
+      if (lobbyGold) lobbyGold.textContent = `💰 ${playerGold}G`;
+      if (resultGold) resultGold.textContent = `💰 ${playerGold}G`;
+    }
+
+    function isSkinOwned(skinId) {
+      return skinId === 0 || ownedSkinIds.includes(skinId);
+    }
+
+    function openSkinBuyModal(skin) {
+      if (!skin) return;
+      pendingBuySkinId = skin.id;
+      const price = getSkinPrice(skin);
+      const modal = document.getElementById("skin-buy-modal");
+      const titleEl = document.getElementById("buy-modal-title");
+      const descEl = document.getElementById("buy-modal-desc");
+      const confirmBtn = document.getElementById("btn-confirm-buy-skin");
+
+      if (titleEl) titleEl.textContent = `${skin.name} 스킨 구매`;
+      if (descEl) {
+        if (playerGold >= price) {
+          descEl.innerHTML = `<b>${skin.name}</b> 스킨을 <b>${price}G</b>에 구매하시겠습니까?<br><span style="font-size:11px;color:#94a3b8;">구매 후 보유 골드: ${playerGold - price}G</span>`;
+        } else {
+          descEl.innerHTML = `<b>${skin.name}</b> 스킨 가격은 <b>${price}G</b>입니다.<br><span style="font-size:11px;color:#fca5a5;">현재 보유 골드(${playerGold}G)가 ${price - playerGold}G 부족합니다. 레이스 3위 안에 들면 50G를 획득합니다!</span>`;
+        }
+      }
+      if (confirmBtn) {
+        confirmBtn.disabled = playerGold < price;
+        confirmBtn.style.opacity = playerGold < price ? "0.45" : "1";
+      }
+      if (modal) {
+        modal.classList.remove("hidden");
+        modal.style.display = "flex";
+        modal.style.pointerEvents = "auto";
+      }
+    }
+
+    function closeSkinModal() {
+      pendingBuySkinId = null;
+      const modal = document.getElementById("skin-buy-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.style.display = "none";
+        modal.style.pointerEvents = "none";
+      }
+    }
+
+    function confirmBuySkin() {
+      if (pendingBuySkinId === null) return;
+      const skin = SKINS[pendingBuySkinId];
+      if (!skin) { closeSkinModal(); return; }
+      const price = getSkinPrice(skin);
+      if (playerGold >= price && !isSkinOwned(skin.id)) {
+        playerGold -= price;
+        ownedSkinIds.push(skin.id);
+        selectedSkinId = skin.id;
+        saveEconomyState();
+        SoundEngine.playCoin();
+        renderSkinGrid();
+      }
+      closeSkinModal();
+    }
 
     // ==========================================
-    // 2. 닉네임 & 친구 목록 자동 저장
+    // 2. 닉네임 & 친구 목록 스토리지 자동 저장
     // ==========================================
     const DEFAULT_NICK = "러너" + Math.floor(100 + Math.random() * 900);
     let myNickname = (safeGetStorage("parkour_nickname", "") || "").trim() || DEFAULT_NICK;
     safeSetStorage("parkour_nickname", myNickname);
 
-    const nickInput = document.getElementById("nickname-input");
-    const nickBadge = document.getElementById("nickname-saved-badge");
-    nickInput.value = myNickname;
-
     function getSanitizedNickname() {
-      const val = nickInput.value.trim().slice(0, 10);
+      const nickInput = document.getElementById("nickname-input");
+      const raw = nickInput ? nickInput.value : myNickname;
+      const val = (raw || "").trim().slice(0, 10);
       return val || myNickname || DEFAULT_NICK;
     }
 
@@ -1432,7 +1572,8 @@
     function renderFriendsList() {
       const container = document.getElementById("friends-list");
       const countEl = document.getElementById("friends-count");
-      countEl.textContent = String(friendsList.length);
+      if (!container) return;
+      if (countEl) countEl.textContent = String(friendsList.length);
 
       if (friendsList.length === 0) {
         container.innerHTML = `<div class="friend-empty">아직 추가된 친구가 없습니다. 레이스를 완주하고 + 버튼을 눌러보세요!</div>`;
@@ -1466,92 +1607,35 @@
           inviteFriendToRoom(f);
         });
 
-        chip.querySelector(".friend-del-btn").addEventListener("click", (e) => {
-          e.stopPropagation();
-          removeFriend(f.name);
-        });
+        const delBtn = chip.querySelector(".friend-del-btn");
+        if (delBtn) {
+          delBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            removeFriend(f.name);
+          });
+        }
 
         container.appendChild(chip);
       });
     }
 
-    let pendingBuySkinId = null;
-
-    function openSkinBuyModal(skin) {
-      pendingBuySkinId = skin.id;
-      const price = getSkinPrice(skin);
-      const titleEl = document.getElementById("buy-modal-title");
-      const descEl = document.getElementById("buy-modal-desc");
-      const confirmBtn = document.getElementById("btn-confirm-buy-skin");
-      const canAfford = playerGold >= price;
-
-      if (titleEl) titleEl.textContent = `🎨 [${skin.name}] 스킨 구매`;
-      if (descEl) {
-        descEl.innerHTML = canAfford
-          ? `가격: <strong style="color:#fde047;">${price}G</strong> (현재 보유: <strong style="color:#34d399;">${playerGold}G</strong>)<br>구매 후 즉시 장착됩니다. 구매하시겠습니까?`
-          : `가격: <strong style="color:#fde047;">${price}G</strong> (현재 보유: <strong style="color:#f87171;">${playerGold}G</strong>)<br>골드가 부족합니다! 레이스에서 3위 이내 입상 시 <strong>50G</strong>를 획득할 수 있습니다.`;
-      }
-      if (confirmBtn) {
-        confirmBtn.textContent = `💰 ${price}G 구매`;
-        confirmBtn.disabled = !canAfford;
-        confirmBtn.style.opacity = canAfford ? "1" : "0.45";
-        confirmBtn.style.cursor = canAfford ? "pointer" : "not-allowed";
-      }
-      const modalEl = document.getElementById("skin-buy-modal");
-      if (modalEl) modalEl.classList.remove("hidden");
-    }
-
-    function closeSkinBuyModal() {
-      pendingBuySkinId = null;
-      const modalEl = document.getElementById("skin-buy-modal");
-      if (modalEl) modalEl.classList.add("hidden");
-    }
-
-    document.getElementById("skin-buy-modal").addEventListener("click", (e) => {
-      if (e.target.id === "skin-buy-modal") closeSkinBuyModal();
-    });
-
-    document.getElementById("btn-confirm-buy-skin").addEventListener("click", () => {
-      if (pendingBuySkinId === null) return;
-      const targetSkin = SKINS[pendingBuySkinId];
-      closeSkinBuyModal();
-      if (!targetSkin || unlockedSkins.includes(targetSkin.id)) return;
-      const price = getSkinPrice(targetSkin);
-      if (playerGold < price) {
-        document.getElementById("match-status").textContent =
-          `⚠️ 골드가 부족합니다! (필요: ${price}G / 보유: ${playerGold}G - 레이스 3위 이내 입상 시 50G 획득)`;
-        return;
-      }
-      playerGold -= price;
-      unlockedSkins.push(targetSkin.id);
-      selectedSkinId = targetSkin.id;
-      safeSetStorage("parkour_skin_id", String(selectedSkinId));
-      saveEconomyState();
-      SoundEngine.playCoin();
-      document.getElementById("match-status").textContent =
-        `🎉 [${targetSkin.name}] 스킨 구매 및 장착 완료! (남은 골드: ${playerGold}G)`;
-      renderSkinGrid();
-    });
-
-    document.getElementById("btn-cancel-buy-skin").addEventListener("click", closeSkinBuyModal);
-
     function renderSkinGrid() {
       const grid = document.getElementById("skin-grid");
+      if (!grid) return;
       grid.innerHTML = "";
       SKINS.forEach(skin => {
-        const isUnlocked = skin.id === 0 || unlockedSkins.includes(skin.id);
+        const owned = isSkinOwned(skin.id);
         const price = getSkinPrice(skin);
         const card = document.createElement("div");
-        card.className = "skin-card"
-          + (skin.id === selectedSkinId ? " active" : "")
-          + (!isUnlocked ? " locked" : "")
-          + (skin.isRainbow ? " rainbow-tier" : "");
+        card.className =
+          "skin-card" +
+          (skin.id === selectedSkinId && owned ? " active" : "") +
+          (!owned ? " locked" : "") +
+          (skin.isRainbow ? " rainbow-tier" : "");
 
-        const priceBadgeHtml = skin.id === 0
-          ? `<span class="skin-price-badge owned">기본 무료</span>`
-          : (isUnlocked
-              ? `<span class="skin-price-badge owned">보유중</span>`
-              : `<span class="skin-price-badge ${skin.isRainbow ? "rainbow-price" : "locked"}">🔒 ${price}G</span>`);
+        const priceBadgeHtml = owned
+          ? `<div class="skin-price-badge owned">${skin.id === 0 ? "기본" : "보유중"}</div>`
+          : `<div class="skin-price-badge ${skin.isRainbow ? "rainbow-price" : "locked"}">🔒 ${price}G</div>`;
 
         card.innerHTML = `
           <div class="skin-preview" style="border-color:${skin.band};">
@@ -1576,24 +1660,25 @@
           ${priceBadgeHtml}
         `;
         card.addEventListener("click", () => {
-          if (isUnlocked) {
-            selectedSkinId = skin.id;
-            safeSetStorage("parkour_skin_id", String(selectedSkinId));
-            document.getElementById("selected-skin-label").textContent = skin.name;
-            renderSkinGrid();
-          } else {
+          if (!owned) {
             openSkinBuyModal(skin);
+            return;
           }
+          selectedSkinId = skin.id;
+          saveEconomyState();
+          const labelEl = document.getElementById("selected-skin-label");
+          if (labelEl) labelEl.textContent = skin.name;
+          renderSkinGrid();
         });
         grid.appendChild(card);
       });
-      document.getElementById("selected-skin-label").textContent = SKINS[selectedSkinId].name;
+      const selectedSkin = SKINS[selectedSkinId] || SKINS[0];
+      const labelEl = document.getElementById("selected-skin-label");
+      if (labelEl) labelEl.textContent = selectedSkin.name;
     }
-    renderSkinGrid();
-    renderFriendsList();
 
     // ==========================================
-    // 3. 상시 로비 프레즌스 & 친구 초대 채널 (안전 폴백 포함)
+    // 3. 상시 로비 프레즌스 & 친구 초대 채널 (MQTT)
     // ==========================================
     const LOBBY_PRESENCE_TOPIC = "parkour-rush-lobby-presence-v1";
     let lobbyMqtt = null;
@@ -1601,49 +1686,44 @@
     let pendingInvite = null;
     let inviteDismissTimer = null;
     let inviteProgressInterval = null;
-    let activeRoomCode = "";
-    let gameState = "LOBBY";
 
     function getInviteTopicForNick(nick) {
       return "parkour-rush-invite-" + encodeURIComponent((nick || "").trim());
     }
 
     function syncInviteSubscription() {
-      try {
-        if (!lobbyMqtt || !lobbyMqtt.connected) return;
-        const desiredTopic = getInviteTopicForNick(myNickname);
-        if (subscribedInviteTopic && subscribedInviteTopic !== desiredTopic) {
-          lobbyMqtt.unsubscribe(subscribedInviteTopic);
-        }
-        if (subscribedInviteTopic !== desiredTopic) {
+      if (!lobbyMqtt || !lobbyMqtt.connected) return;
+      const desiredTopic = getInviteTopicForNick(myNickname);
+      if (subscribedInviteTopic && subscribedInviteTopic !== desiredTopic) {
+        try { lobbyMqtt.unsubscribe(subscribedInviteTopic); } catch (e) {}
+      }
+      if (subscribedInviteTopic !== desiredTopic) {
+        try {
           lobbyMqtt.subscribe(desiredTopic);
           subscribedInviteTopic = desiredTopic;
-        }
-      } catch (e) {}
+        } catch (e) {}
+      }
     }
 
     function initPersistentLobbyPresence() {
-      if (typeof mqtt === "undefined" || !mqtt || typeof mqtt.connect !== "function") return;
+      if (typeof mqtt === "undefined") return;
       try {
         lobbyMqtt = mqtt.connect("wss://broker.emqx.io:8084/mqtt", {
           clientId: "pk_lobby_" + Math.random().toString(36).slice(2, 10),
           clean: true,
-          reconnectPeriod: 5000,
+          reconnectPeriod: 4000,
           connectTimeout: 4000
         });
       } catch (e) {
-        lobbyMqtt = null;
         return;
       }
 
       lobbyMqtt.on("error", () => {});
 
       lobbyMqtt.on("connect", () => {
-        try {
-          lobbyMqtt.subscribe(LOBBY_PRESENCE_TOPIC);
-          syncInviteSubscription();
-          publishLobbyPresence();
-        } catch (e) {}
+        try { lobbyMqtt.subscribe(LOBBY_PRESENCE_TOPIC); } catch (e) {}
+        syncInviteSubscription();
+        publishLobbyPresence();
       });
 
       lobbyMqtt.on("message", (topic, payload) => {
@@ -1673,9 +1753,9 @@
     }
 
     function publishLobbyPresence() {
+      if (!lobbyMqtt || !lobbyMqtt.connected) return;
+      syncInviteSubscription();
       try {
-        if (!lobbyMqtt || !lobbyMqtt.connected) return;
-        syncInviteSubscription();
         lobbyMqtt.publish(LOBBY_PRESENCE_TOPIC, JSON.stringify({
           nick: myNickname,
           skin: selectedSkinId,
@@ -1686,28 +1766,7 @@
       } catch (e) {}
     }
 
-    setInterval(publishLobbyPresence, 3000);
-
-    nickInput.addEventListener("input", () => {
-      const raw = nickInput.value.trim().slice(0, 10);
-      if (raw) {
-        myNickname = raw;
-        safeSetStorage("parkour_nickname", myNickname);
-        nickBadge.textContent = "✅ 저장됨 (" + myNickname + ")";
-        syncInviteSubscription();
-      } else {
-        nickBadge.textContent = "⚠️ 공백 시 기존 닉네임 유지";
-      }
-    });
-
-    nickInput.addEventListener("blur", () => {
-      myNickname = getSanitizedNickname();
-      nickInput.value = myNickname;
-      safeSetStorage("parkour_nickname", myNickname);
-      nickBadge.textContent = "✅ 자동 저장됨";
-      syncInviteSubscription();
-      publishLobbyPresence();
-    });
+    setInterval(publishLobbyPresence, 2500);
 
     function inviteFriendToRoom(friend) {
       myNickname = getSanitizedNickname();
@@ -1730,7 +1789,7 @@
       try {
         if (lobbyMqtt && lobbyMqtt.connected) {
           lobbyMqtt.publish(targetTopic, JSON.stringify(invitePacket));
-        } else if (mqttClient && mqttClient.connected) {
+        } else if (typeof mqttClient !== "undefined" && mqttClient && mqttClient.connected) {
           mqttClient.publish(targetTopic, JSON.stringify(invitePacket));
         }
       } catch (e) {}
@@ -1742,14 +1801,21 @@
         renderFriendsList();
       }, 4500);
 
-      statusEl.textContent = `📨 [${friend.name}]님에게 방 [${activeRoomCode}] 초대 메시지를 보냈습니다! 수락하면 자동 입장합니다.`;
+      if (statusEl) {
+        statusEl.textContent = `📨 [${friend.name}]님에게 방 [${activeRoomCode}] 초대 메시지를 보냈습니다! 수락하면 자동 입장합니다.`;
+      }
     }
 
     function hideInviteToast() {
       pendingInvite = null;
       if (inviteDismissTimer) { clearTimeout(inviteDismissTimer); inviteDismissTimer = null; }
       if (inviteProgressInterval) { clearInterval(inviteProgressInterval); inviteProgressInterval = null; }
-      document.getElementById("invite-toast").classList.add("hidden");
+      const toastEl = document.getElementById("invite-toast");
+      if (toastEl) {
+        toastEl.classList.add("hidden");
+        toastEl.style.display = "none";
+        toastEl.style.pointerEvents = "none";
+      }
     }
 
     function showIncomingInviteToast(inviteData) {
@@ -1758,23 +1824,31 @@
 
       const skin = SKINS[inviteData.fromSkin] || SKINS[0];
       const dotEl = document.getElementById("invite-sender-dot");
-      dotEl.style.background = skin.body;
-      dotEl.style.borderColor = skin.band;
+      if (dotEl) {
+        dotEl.style.background = skin.body;
+        dotEl.style.borderColor = skin.band;
+      }
 
-      document.getElementById("invite-message-text").textContent = `💌 ${inviteData.fromNick}님이 방으로 초대했습니다!`;
-      document.getElementById("invite-room-pill").textContent = `방 ${inviteData.roomCode}`;
+      const msgEl = document.getElementById("invite-message-text");
+      const pillEl = document.getElementById("invite-room-pill");
+      if (msgEl) msgEl.textContent = `💌 ${inviteData.fromNick}님이 방으로 초대했습니다!`;
+      if (pillEl) pillEl.textContent = `방 ${inviteData.roomCode}`;
 
       const fillEl = document.getElementById("invite-timer-fill");
-      fillEl.style.width = "100%";
+      if (fillEl) fillEl.style.width = "100%";
 
       const toastEl = document.getElementById("invite-toast");
-      toastEl.classList.remove("hidden");
+      if (toastEl) {
+        toastEl.classList.remove("hidden");
+        toastEl.style.display = "flex";
+        toastEl.style.pointerEvents = "auto";
+      }
 
       const durationMs = 15000;
       const createdAt = Date.now();
       inviteProgressInterval = setInterval(() => {
         const remain = Math.max(0, durationMs - (Date.now() - createdAt));
-        fillEl.style.width = ((remain / durationMs) * 100) + "%";
+        if (fillEl) fillEl.style.width = ((remain / durationMs) * 100) + "%";
       }, 150);
 
       inviteDismissTimer = setTimeout(() => {
@@ -1782,26 +1856,23 @@
       }, durationMs);
     }
 
-    document.getElementById("btn-accept-invite").addEventListener("click", () => {
+    function acceptIncomingInvite() {
       if (!pendingInvite || !pendingInvite.roomCode) return;
-      const targetCode = pendingInvite.roomCode.toUpperCase();
+      const targetCode = String(pendingInvite.roomCode).toUpperCase();
       const inviterName = pendingInvite.fromNick || "친구";
       hideInviteToast();
 
       cleanupNetwork();
       resetInputs();
-      document.getElementById("countdown-overlay").classList.add("hidden");
-      document.getElementById("result-screen").classList.add("hidden");
-      document.getElementById("lobby-screen").classList.remove("hidden");
-      document.getElementById("room-code-input").value = targetCode;
+      showScreen("LOBBY");
+
+      const codeInput = document.getElementById("room-code-input");
+      if (codeInput) codeInput.value = targetCode;
 
       connectRoomOrQueue("CUSTOM_GUEST", targetCode);
-      document.getElementById("match-status").textContent = `✅ [${inviterName}]님의 초대 수락! 방 [${targetCode}]에 자동 입장 중...`;
-    });
-
-    document.getElementById("btn-decline-invite").addEventListener("click", () => {
-      hideInviteToast();
-    });
+      const statusEl = document.getElementById("match-status");
+      if (statusEl) statusEl.textContent = `✅ [${inviterName}]님의 초대 수락! 방 [${targetCode}]에 자동 입장 중...`;
+    }
 
     // ==========================================
     // 4. 12가지 랜덤 맵 생성기
@@ -1831,8 +1902,8 @@
     }
 
     function buildCourse(mapIndex, seed) {
-      const theme = MAP_THEMES[Math.abs(Number(mapIndex) || 0) % MAP_THEMES.length];
-      const rand = mulberry32(Number(seed) || 12345);
+      const theme = MAP_THEMES[Math.abs(mapIndex) % MAP_THEMES.length];
+      const rand = mulberry32(seed);
       const platforms = [];
       const hazards = [];
       const springs = [];
@@ -1892,30 +1963,57 @@
     }
 
     // ==========================================
-    // 5. 캔버스 리사이즈
+    // 5. 캔버스 리사이즈 & 카메라 시야 넓게 토글
     // ==========================================
     const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    let viewW = window.innerWidth;
-    let viewH = window.innerHeight;
+    const ctx = canvas ? canvas.getContext("2d") : null;
+    let viewW = window.innerWidth || 800;
+    let viewH = window.innerHeight || 600;
+    const NORMAL_CAMERA_ZOOM = 1.0;
+    const WIDE_CAMERA_ZOOM = 0.65;
+    let wideViewEnabled = false;
+    let cameraZoom = NORMAL_CAMERA_ZOOM;
 
     function resizeCanvas() {
+      if (!canvas || !ctx) return;
       const rect = canvas.getBoundingClientRect();
-      viewW = Math.max(320, rect.width || window.innerWidth);
-      viewH = Math.max(240, rect.height || window.innerHeight);
+      viewW = Math.max(320, Math.round(rect.width || window.innerWidth || 800));
+      viewH = Math.max(240, Math.round(rect.height || window.innerHeight || 600));
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.floor(viewW * dpr);
       canvas.height = Math.floor(viewH * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
-    window.addEventListener("resize", resizeCanvas);
-    if (window.ResizeObserver) {
-      new ResizeObserver(resizeCanvas).observe(document.getElementById("game-wrapper"));
+
+    function updateWideViewToggleUI() {
+      const hudWideBtn = document.getElementById("btn-wide-hud");
+      const cdWideBtn = document.getElementById("btn-wide-view");
+      [hudWideBtn, cdWideBtn].forEach(btn => {
+        if (!btn) return;
+        if (wideViewEnabled) {
+          btn.textContent = "🔍 기본 시야";
+          btn.classList.add("active");
+          btn.title = "기본 카메라 시야로 복귀";
+        } else {
+          btn.textContent = "🔭 시야 넓게";
+          btn.classList.remove("active");
+          btn.title = "앞쪽 지형과 경쟁자를 더 넓게 보기";
+        }
+      });
     }
-    resizeCanvas();
+
+    function setWideViewEnabled(nextWide) {
+      wideViewEnabled = Boolean(nextWide);
+      updateWideViewToggleUI();
+      if (typeof render === "function") render();
+    }
+
+    function toggleWideView() {
+      setWideViewEnabled(!wideViewEnabled);
+    }
 
     // ==========================================
-    // 6. 입력 처리 (터치 & 키보드)
+    // 6. 중앙 화면 전환 및 입력 처리
     // ==========================================
     const input = { left: false, right: false, jump: false, dash: false };
 
@@ -1927,7 +2025,65 @@
       document.querySelectorAll(".touch-btn").forEach(b => b.classList.remove("pressed"));
     }
 
-    function bindButton(el, keyName, onTrigger) {
+    function setOverlayVisibility(el, visible, displayValue = "flex") {
+      if (!el) return;
+      if (visible) {
+        el.classList.remove("hidden");
+        el.style.display = displayValue;
+        el.style.pointerEvents = "auto";
+      } else {
+        el.classList.add("hidden");
+        el.style.display = "none";
+        el.style.pointerEvents = "none";
+      }
+    }
+
+    function showScreen(screenName) {
+      const lobbyEl = document.getElementById("lobby-screen");
+      const resultEl = document.getElementById("result-screen");
+      const countdownEl = document.getElementById("countdown-overlay");
+
+      closeSkinModal();
+
+      if (screenName === "LOBBY") {
+        setOverlayVisibility(lobbyEl, true, "flex");
+        setOverlayVisibility(resultEl, false, "none");
+        if (countdownEl) {
+          countdownEl.classList.add("hidden");
+          countdownEl.style.display = "none";
+          countdownEl.style.pointerEvents = "none";
+        }
+      } else if (screenName === "COUNTDOWN") {
+        setOverlayVisibility(lobbyEl, false, "none");
+        setOverlayVisibility(resultEl, false, "none");
+        if (countdownEl) {
+          countdownEl.classList.remove("hidden");
+          countdownEl.style.display = "flex";
+          countdownEl.style.pointerEvents = "none";
+        }
+      } else if (screenName === "RACING") {
+        setOverlayVisibility(lobbyEl, false, "none");
+        setOverlayVisibility(resultEl, false, "none");
+        if (countdownEl) {
+          countdownEl.classList.add("hidden");
+          countdownEl.style.display = "none";
+          countdownEl.style.pointerEvents = "none";
+        }
+      } else if (screenName === "RESULT") {
+        setOverlayVisibility(lobbyEl, false, "none");
+        setOverlayVisibility(resultEl, true, "flex");
+        if (countdownEl) {
+          countdownEl.classList.add("hidden");
+          countdownEl.style.display = "none";
+          countdownEl.style.pointerEvents = "none";
+        }
+      }
+
+      resizeCanvas();
+    }
+
+    function bindTouchOrMouseAction(el, keyName, onTrigger) {
+      if (!el) return;
       const press = (e) => {
         if (e && e.type === "touchstart" && e.cancelable) e.preventDefault();
         input[keyName] = true;
@@ -1947,32 +2103,6 @@
       el.addEventListener("mouseup", release);
       el.addEventListener("mouseleave", release);
     }
-
-    bindButton(document.getElementById("btn-left"), "left");
-    bindButton(document.getElementById("btn-right"), "right");
-    bindButton(document.getElementById("btn-jump"), "jump", () => tryJump());
-    bindButton(document.getElementById("btn-dash"), "dash", () => tryDash());
-
-    window.addEventListener("keydown", (e) => {
-      if (document.activeElement && document.activeElement.tagName === "INPUT") return;
-      if (e.code === "ArrowLeft" || e.code === "KeyA") input.left = true;
-      if (e.code === "ArrowRight" || e.code === "KeyD") input.right = true;
-      if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") {
-        if (!input.jump) tryJump();
-        input.jump = true;
-      }
-      if (e.code === "ShiftLeft" || e.code === "ShiftRight" || e.code === "KeyE") {
-        if (!input.dash) tryDash();
-        input.dash = true;
-      }
-    });
-    window.addEventListener("keyup", (e) => {
-      if (e.code === "ArrowLeft" || e.code === "KeyA") input.left = false;
-      if (e.code === "ArrowRight" || e.code === "KeyD") input.right = false;
-      if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") input.jump = false;
-      if (e.code === "ShiftLeft" || e.code === "ShiftRight" || e.code === "KeyE") input.dash = false;
-    });
-    window.addEventListener("blur", resetInputs);
 
     // ==========================================
     // 7. 멀티플레이어 레이스 상태 & 물리 + 트레일/점프 이펙트
@@ -2041,6 +2171,7 @@
 
     function setupProgressMarkers() {
       const track = document.getElementById("progress-track");
+      if (!track) return;
       track.querySelectorAll(".marker-opp").forEach(el => el.remove());
       racers.forEach((r, idx) => {
         const dot = document.createElement("div");
@@ -2048,7 +2179,7 @@
         dot.id = "marker-opp-" + r.id;
         dot.textContent = (r.name || ("P" + (idx + 2))).slice(0, 2);
         dot.title = r.name;
-        dot.style.background = SKINS[r.skinId]?.body || "#ef4444";
+        dot.style.background = (SKINS[r.skinId] && SKINS[r.skinId].body) || "#ef4444";
         dot.style.left = "0%";
         track.appendChild(dot);
       });
@@ -2102,7 +2233,6 @@
       const skin = SKINS[skinId] || SKINS[0];
       const count = isSuperJump ? 20 : 12;
 
-      // 발밑 확산 충격파 링 추가
       const ringCount = isSuperJump ? 2 : 1;
       for (let rIdx = 0; rIdx < ringCount; rIdx++) {
         const ringColor = skin.isRainbow
@@ -2122,7 +2252,6 @@
         });
       }
 
-      // 방사형 & 상승 점프 파티클 분출
       for (let i = 0; i < count; i++) {
         const spreadAngle = -Math.PI + (Math.PI * (i + 0.5)) / count + (Math.random() - 0.5) * 0.25;
         const speed = (isSuperJump ? 130 : 85) + Math.random() * (isSuperJump ? 140 : 95);
@@ -2257,6 +2386,7 @@
     }
 
     function renderBackTrailParticles() {
+      if (!ctx) return;
       if (jumpRingEffects.length > 0) {
         ctx.save();
         for (const ring of jumpRingEffects) {
@@ -2324,7 +2454,7 @@
     }
 
     // ==========================================
-    // 8. 5자리 방 코드 & 실시간 매칭 (즉시 화면 전환 보장)
+    // 8. 5자리 방 코드 & 실시간 매칭 (안전한 화면 전환)
     // ==========================================
     let mqttClient = null;
     let peer = null;
@@ -2334,7 +2464,6 @@
     let matchLoopTimer = null;
     let autoFillTimer = null;
     let syncInterval = null;
-    let waitSeconds = 12;
 
     function generate5CharCode() {
       const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -2356,38 +2485,55 @@
       activeRoomCode = "";
       if (peer) { try { peer.destroy(); } catch (e) {} peer = null; }
       if (mqttClient) { try { mqttClient.end(true); } catch (e) {} mqttClient = null; }
+
       const fillBtn = document.getElementById("btn-fill-now");
-      fillBtn.classList.add("hidden");
-      fillBtn.classList.remove("party-ready");
-      fillBtn.textContent = "🚀 지금 출발하기 (빈자리 AI 합류로 10명 시작)";
-      document.getElementById("lobby-slots").classList.add("hidden");
-      document.getElementById("room-banner").classList.add("hidden");
+      if (fillBtn) {
+        fillBtn.classList.add("hidden");
+        fillBtn.classList.remove("party-ready");
+        fillBtn.style.display = "none";
+        fillBtn.textContent = "🚀 지금 출발하기 (빈자리 AI 합류로 10명 시작)";
+      }
+      const slotsEl = document.getElementById("lobby-slots");
+      if (slotsEl) {
+        slotsEl.classList.add("hidden");
+        slotsEl.style.display = "none";
+      }
+      const bannerEl = document.getElementById("room-banner");
+      if (bannerEl) {
+        bannerEl.classList.add("hidden");
+        bannerEl.style.display = "none";
+      }
     }
 
-    function transitionToLobby(statusMessage = "친구를 눌러 바로 방에 초대하거나, 방 만들기 / 10인 매치를 선택하세요!") {
+    function exitToLobby(statusMessage = "친구를 눌러 바로 방에 초대하거나, 방 만들기 / 10인 매치를 선택하세요!") {
       cleanupNetwork();
-      closeSkinBuyModal();
       resetInputs();
       gameState = "LOBBY";
       elapsedTime = 0;
-      document.getElementById("hud-timer").textContent = "⏱️ 00.00s";
-      document.getElementById("progress-me").style.width = "0%";
-      document.getElementById("marker-me").style.left = "0%";
+      const timerEl = document.getElementById("hud-timer");
+      const progEl = document.getElementById("progress-me");
+      const markerEl = document.getElementById("marker-me");
+      if (timerEl) timerEl.textContent = "⏱️ 00.00s";
+      if (progEl) progEl.style.width = "0%";
+      if (markerEl) markerEl.style.left = "0%";
+
       publishLobbyPresence();
       updateGoldDisplays();
       renderSkinGrid();
       renderFriendsList();
-      document.getElementById("countdown-overlay").classList.add("hidden");
-      document.getElementById("result-screen").classList.add("hidden");
-      document.getElementById("lobby-screen").classList.remove("hidden");
-      document.getElementById("match-status").textContent = statusMessage;
+      showScreen("LOBBY");
+
+      const statusEl = document.getElementById("match-status");
+      if (statusEl) statusEl.textContent = statusMessage;
     }
 
     function updateHostStartButtonUI() {
       const fillBtn = document.getElementById("btn-fill-now");
+      if (!fillBtn) return;
       if (matchMode === "CUSTOM_HOST") {
         const count = Math.min(10, Math.max(1, queueMembers.size));
         fillBtn.classList.remove("hidden");
+        fillBtn.style.display = "block";
         if (count >= 2) {
           fillBtn.classList.add("party-ready");
           fillBtn.textContent = `🚀 지금 시작하기 (현재 방 인원 ${count}명끼리 바로 시작)`;
@@ -2398,13 +2544,16 @@
       } else if (matchMode === "ONLINE_RANDOM" || matchMode === "CUSTOM_GUEST") {
         fillBtn.classList.remove("hidden");
         fillBtn.classList.remove("party-ready");
+        fillBtn.style.display = "block";
         fillBtn.textContent = "🚀 지금 출발하기 (빈자리 AI 합류로 10명 시작)";
       }
     }
 
     function updateLobbySlotsUI() {
       const slotsEl = document.getElementById("lobby-slots");
+      if (!slotsEl) return;
       slotsEl.classList.remove("hidden");
+      slotsEl.style.display = "grid";
       const members = Array.from(queueMembers.values()).slice(0, 10);
       let html = "";
       for (let i = 0; i < 10; i++) {
@@ -2424,20 +2573,32 @@
       if (matchLoopTimer) { clearInterval(matchLoopTimer); matchLoopTimer = null; }
       if (autoFillTimer) { clearInterval(autoFillTimer); autoFillTimer = null; }
       if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
-      closeSkinBuyModal();
 
       const fillBtn = document.getElementById("btn-fill-now");
-      fillBtn.classList.add("hidden");
-      fillBtn.classList.remove("party-ready");
-      document.getElementById("lobby-slots").classList.add("hidden");
-      document.getElementById("room-banner").classList.add("hidden");
+      if (fillBtn) {
+        fillBtn.classList.add("hidden");
+        fillBtn.classList.remove("party-ready");
+        fillBtn.style.display = "none";
+      }
+      const slotsEl = document.getElementById("lobby-slots");
+      if (slotsEl) {
+        slotsEl.classList.add("hidden");
+        slotsEl.style.display = "none";
+      }
+      const bannerEl = document.getElementById("room-banner");
+      if (bannerEl) {
+        bannerEl.classList.add("hidden");
+        bannerEl.style.display = "none";
+      }
 
       resetInputs();
       myNickname = getSanitizedNickname();
       safeSetStorage("parkour_nickname", myNickname);
       raceRewardClaimed = false;
       elapsedTime = 0;
-      document.getElementById("hud-timer").textContent = "⏱️ 00.00s";
+      const timerEl = document.getElementById("hud-timer");
+      if (timerEl) timerEl.textContent = "⏱️ 00.00s";
+
       gameState = "COUNTDOWN";
       currentCourse = buildCourse(mapIdx, seed);
 
@@ -2474,37 +2635,47 @@
 
       racers = builtRacers;
       resetPlayersForCourse(currentCourse);
-      resizeCanvas();
 
       const totalCount = getTotalParticipants();
-      document.getElementById("hud-rank").textContent = `🏅 1위 / ${totalCount}명`;
-      document.getElementById("marker-me").textContent = myNickname.slice(0, 2);
-      document.getElementById("lobby-screen").classList.add("hidden");
-      document.getElementById("result-screen").classList.add("hidden");
-      document.getElementById("hud-map").textContent = "🗺️ " + currentCourse.theme.name;
-      document.getElementById("hud-mode").textContent = modeLabel;
+      const rankEl = document.getElementById("hud-rank");
+      const markerMeEl = document.getElementById("marker-me");
+      const mapEl = document.getElementById("hud-map");
+      const modeEl = document.getElementById("hud-mode");
+      if (rankEl) rankEl.textContent = `🏅 1위 / ${totalCount}명`;
+      if (markerMeEl) markerMeEl.textContent = myNickname.slice(0, 2);
+      if (mapEl) mapEl.textContent = "🗺️ " + currentCourse.theme.name;
+      if (modeEl) modeEl.textContent = modeLabel;
+
+      showScreen("COUNTDOWN");
 
       const cdEl = document.getElementById("countdown-overlay");
-      cdEl.classList.remove("hidden");
+      const cdNumEl = document.getElementById("countdown-number");
       let count = 3;
-      cdEl.textContent = String(count);
+      if (cdNumEl) cdNumEl.textContent = String(count);
 
       countdownInterval = setInterval(() => {
         if (gameState !== "COUNTDOWN" && gameState !== "RACING") {
           clearInterval(countdownInterval);
           countdownInterval = null;
-          cdEl.classList.add("hidden");
+          if (cdEl) {
+            cdEl.classList.add("hidden");
+            cdEl.style.display = "none";
+          }
           return;
         }
         count--;
         if (count > 0) {
-          cdEl.textContent = String(count);
+          if (cdNumEl) cdNumEl.textContent = String(count);
         } else if (count === 0) {
-          cdEl.textContent = "GO!";
+          if (cdNumEl) cdNumEl.textContent = "GO!";
           gameState = "RACING";
           raceStartTime = performance.now();
+          showScreen("RACING");
         } else {
-          cdEl.classList.add("hidden");
+          if (cdEl) {
+            cdEl.classList.add("hidden");
+            cdEl.style.display = "none";
+          }
           clearInterval(countdownInterval);
           countdownInterval = null;
         }
@@ -2571,36 +2742,32 @@
       matchMode = mode;
       activeRoomCode = roomCode || "";
       gameState = "MATCHING";
-      waitSeconds = 8;
       publishLobbyPresence();
 
       const statusEl = document.getElementById("match-status");
       const fillBtn = document.getElementById("btn-fill-now");
       const bannerEl = document.getElementById("room-banner");
 
-      if (activeRoomCode) {
+      if (activeRoomCode && bannerEl) {
         bannerEl.classList.remove("hidden");
-        document.getElementById("active-room-code").textContent = activeRoomCode;
+        bannerEl.style.display = "flex";
+        const codeDispEl = document.getElementById("active-room-code");
+        if (codeDispEl) codeDispEl.textContent = activeRoomCode;
       }
 
       myPeerId = "pk10_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 6);
       queueMembers.set(myPeerId, { id: myPeerId, nick: myNickname, skin: selectedSkinId, lastSeen: Date.now() });
       updateLobbySlotsUI();
-      fillBtn.classList.remove("hidden");
 
-      statusEl.textContent = activeRoomCode
-        ? `🏠 방 [${activeRoomCode}] 대기 중 · 바로 시작하려면 아래 '지금 출발하기'를 누르세요!`
-        : "🌐 10인 매치 대기 중 · '지금 출발하기'로 즉시 시작하거나 상대를 기다리세요!";
+      if (fillBtn) {
+        fillBtn.classList.remove("hidden");
+        fillBtn.style.display = "block";
+      }
 
-      if (mode === "ONLINE_RANDOM") {
-        autoFillTimer = setInterval(() => {
-          if (gameState !== "MATCHING") return;
-          waitSeconds--;
-          statusEl.textContent = `🔍 매칭 중 (${queueMembers.size}/10명) · ${waitSeconds}초 후 빈자리 AI 합류 및 자동 출발!`;
-          if (waitSeconds <= 0) {
-            launchOnline10PRoom();
-          }
-        }, 1000);
+      if (statusEl) {
+        statusEl.textContent = activeRoomCode
+          ? `🏠 방 [${activeRoomCode}] 대기 중 · 바로 시작하려면 '지금 출발하기'를 누르세요!`
+          : "🌐 10인 매치 대기 중 · '지금 출발하기'로 즉시 시작하거나 상대를 기다리세요!";
       }
 
       if (typeof Peer === "undefined" || typeof mqtt === "undefined") {
@@ -2630,7 +2797,7 @@
           clientId: myPeerId,
           clean: true,
           reconnectPeriod: 0,
-          connectTimeout: 3500
+          connectTimeout: 3000
         });
       } catch (err) {
         mqttClient = null;
@@ -2834,10 +3001,11 @@
     }
 
     function finishRace() {
-      if (raceRewardClaimed || gameState === "FINISHED") return;
+      if (raceRewardClaimed || gameState === "RESULT") return;
       raceRewardClaimed = true;
-      gameState = "FINISHED";
+      gameState = "RESULT";
       resetInputs();
+
       const standings = computeStandings();
       const myRank = standings.findIndex(s => s.isMe) + 1;
       const totalCount = standings.length;
@@ -2859,59 +3027,77 @@
         }
       }
 
-      document.getElementById("result-icon").textContent = myRank === 1 ? "🏆" : (myRank <= 3 ? "🥈" : "🏁");
-      document.getElementById("result-title").textContent = `${myNickname} · ${myRank}위 완주!`;
-      document.getElementById("result-desc").textContent = `총 ${totalCount}명 중 ${myRank}위 · 완주 기록: ${elapsedTime.toFixed(2)}초`;
+      const iconEl = document.getElementById("result-icon");
+      const titleEl = document.getElementById("result-title");
+      const descEl = document.getElementById("result-desc");
+      if (iconEl) iconEl.textContent = myRank === 1 ? "🏆" : (myRank <= 3 ? "🥈" : "🏁");
+      if (titleEl) titleEl.textContent = `${myNickname} · ${myRank}위 완주!`;
+      if (descEl) descEl.textContent = `총 ${totalCount}명 중 ${myRank}위 · 완주 기록: ${elapsedTime.toFixed(2)}초`;
 
       const lbEl = document.getElementById("leaderboard-list");
-      lbEl.innerHTML = "";
+      if (lbEl) {
+        lbEl.innerHTML = "";
 
-      standings.forEach((s, idx) => {
-        const statusStr = s.finished ? `${(s.finishTime || elapsedTime).toFixed(2)}s` : `${Math.floor(s.progress)}% 주행중`;
-        const row = document.createElement("div");
-        row.className = "lb-row" + (s.isMe ? " me" : "");
+        standings.forEach((s, idx) => {
+          const statusStr = s.finished ? `${(s.finishTime || elapsedTime).toFixed(2)}s` : `${Math.floor(s.progress)}% 주행중`;
+          const row = document.createElement("div");
+          row.className = "lb-row" + (s.isMe ? " me" : "");
 
-        const left = document.createElement("div");
-        left.className = "lb-left";
-        left.textContent = `${idx + 1}위 · ${s.isMe ? "⭐ " + s.name : s.name}`;
+          const left = document.createElement("div");
+          left.className = "lb-left";
+          left.textContent = `${idx + 1}위 · ${s.isMe ? "⭐ " + s.name : s.name}`;
 
-        const right = document.createElement("div");
-        right.className = "lb-right";
+          const right = document.createElement("div");
+          right.className = "lb-right";
 
-        const timeSpan = document.createElement("span");
-        timeSpan.textContent = statusStr;
-        right.appendChild(timeSpan);
+          const timeSpan = document.createElement("span");
+          timeSpan.textContent = statusStr;
+          right.appendChild(timeSpan);
 
-        if (!s.isMe) {
-          const already = isFriend(s.name);
-          const addBtn = document.createElement("button");
-          addBtn.type = "button";
-          addBtn.className = "add-friend-btn" + (already ? " added" : "");
-          addBtn.textContent = already ? "✓" : "+";
-          addBtn.title = already ? "이미 친구입니다" : `${s.name} 친구 추가`;
+          if (!s.isMe) {
+            const already = isFriend(s.name);
+            const addBtn = document.createElement("button");
+            addBtn.type = "button";
+            addBtn.className = "add-friend-btn" + (already ? " added" : "");
+            addBtn.textContent = already ? "✓" : "+";
+            addBtn.title = already ? "이미 친구입니다" : `${s.name} 친구 추가`;
 
-          if (!already) {
-            addBtn.addEventListener("click", () => {
-              if (addFriend(s.name, s.skinId)) {
-                addBtn.classList.add("added");
-                addBtn.textContent = "✓";
-                addBtn.title = "친구 추가 완료!";
-              }
-            });
+            if (!already) {
+              addBtn.addEventListener("click", () => {
+                if (addFriend(s.name, s.skinId)) {
+                  addBtn.classList.add("added");
+                  addBtn.textContent = "✓";
+                  addBtn.title = "친구 추가 완료!";
+                }
+              });
+            }
+            right.appendChild(addBtn);
           }
-          right.appendChild(addBtn);
-        }
 
-        row.appendChild(left);
-        row.appendChild(right);
-        lbEl.appendChild(row);
-      });
+          row.appendChild(left);
+          row.appendChild(right);
+          lbEl.appendChild(row);
+        });
+      }
 
-      document.getElementById("result-screen").classList.remove("hidden");
+      showScreen("RESULT");
+    }
+
+    function rematchRace() {
+      if (matchMode === "ONLINE_RANDOM") connectRoomOrQueue("ONLINE_RANDOM", "");
+      else if (matchMode === "CUSTOM_HOST" && activeRoomCode) connectRoomOrQueue("CUSTOM_HOST", activeRoomCode);
+      else startBot10PMatch();
     }
 
     function updatePhysics(dt, timeSec) {
       animClock = timeSec;
+      const targetZoom = wideViewEnabled ? WIDE_CAMERA_ZOOM : NORMAL_CAMERA_ZOOM;
+      const zoomBlend = 1 - Math.exp(-10 * dt);
+      cameraZoom += (targetZoom - cameraZoom) * zoomBlend;
+      if (Math.abs(targetZoom - cameraZoom) < 0.001) {
+        cameraZoom = targetZoom;
+      }
+
       updateBackTrailParticles(dt);
 
       for (const p of currentCourse.platforms) {
@@ -2922,15 +3108,18 @@
       if (gameState !== "RACING") return;
 
       elapsedTime = (performance.now() - raceStartTime) / 1000;
-      document.getElementById("hud-timer").textContent = `⏱️ ${elapsedTime.toFixed(2)}s`;
+      const timerEl = document.getElementById("hud-timer");
+      if (timerEl) timerEl.textContent = `⏱️ ${elapsedTime.toFixed(2)}s`;
 
+      const dashBtn = document.getElementById("btn-dash");
+      const dashCdText = document.getElementById("dash-cd-text");
       if (player.dashCooldown > 0) {
         player.dashCooldown = Math.max(0, player.dashCooldown - dt);
-        document.getElementById("btn-dash").classList.add("cooldown");
-        document.getElementById("dash-cd-text").textContent = player.dashCooldown.toFixed(1) + "s";
+        if (dashBtn) dashBtn.classList.add("cooldown");
+        if (dashCdText) dashCdText.textContent = player.dashCooldown.toFixed(1) + "s";
       } else {
-        document.getElementById("btn-dash").classList.remove("cooldown");
-        document.getElementById("dash-cd-text").textContent = "READY";
+        if (dashBtn) dashBtn.classList.remove("cooldown");
+        if (dashCdText) dashCdText.textContent = "READY";
       }
 
       if (player.dashActiveTimer > 0) {
@@ -3098,13 +3287,16 @@
       }
 
       const myProg = getProgress(player.x);
-      document.getElementById("progress-me").style.width = myProg + "%";
-      document.getElementById("marker-me").style.left = myProg + "%";
+      const progBarEl = document.getElementById("progress-me");
+      const markerMeEl = document.getElementById("marker-me");
+      if (progBarEl) progBarEl.style.width = myProg + "%";
+      if (markerMeEl) markerMeEl.style.left = myProg + "%";
 
       const standings = computeStandings();
       const myRank = standings.findIndex(s => s.isMe) + 1;
       const totalCount = standings.length;
-      document.getElementById("hud-rank").textContent = `🏅 ${myRank}위 / ${totalCount}명`;
+      const rankBadgeEl = document.getElementById("hud-rank");
+      if (rankBadgeEl) rankBadgeEl.textContent = `🏅 ${myRank}위 / ${totalCount}명`;
 
       if (player.x + player.w >= currentCourse.goal.x && !player.finished) {
         player.finished = true;
@@ -3133,6 +3325,7 @@
     }
 
     function drawLeg(hipX, hipY, angleRad, liftY, legLen, footLen, fillColor, shoeColor, isBack) {
+      if (!ctx) return;
       ctx.save();
       ctx.translate(hipX, hipY - liftY);
       ctx.rotate(angleRad);
@@ -3157,6 +3350,7 @@
     }
 
     function drawCharacter(x, y, w, h, facing, skinId, label, isGhost, options = {}) {
+      if (!ctx) return;
       const skin = SKINS[skinId] || SKINS[0];
       const dir = facing >= 0 ? 1 : -1;
       const cx = x + w * 0.5;
@@ -3274,6 +3468,7 @@
     }
 
     function render() {
+      if (!ctx) return;
       const theme = currentCourse.theme;
 
       const grad = ctx.createLinearGradient(0, 0, 0, viewH);
@@ -3282,14 +3477,17 @@
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, viewW, viewH);
 
-      const camX = (player.x + player.w * 0.5) - viewW * 0.5;
-      const camY = (player.y + player.h * 0.5) - viewH * 0.5;
+      const safeZoom = Math.max(0.35, cameraZoom || 1);
+      const worldViewW = viewW / safeZoom;
+      const worldViewH = viewH / safeZoom;
+      const camX = (player.x + player.w * 0.5) - worldViewW * 0.5;
+      const camY = (player.y + player.h * 0.5) - worldViewH * 0.5;
 
       ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
       ctx.lineWidth = 1;
-      const gridSize = 80;
-      const offsetX = -(camX % gridSize);
-      const offsetY = -(camY % gridSize);
+      const gridSize = 80 * safeZoom;
+      const offsetX = -(((camX * safeZoom) % gridSize) + gridSize) % gridSize;
+      const offsetY = -(((camY * safeZoom) % gridSize) + gridSize) % gridSize;
       ctx.beginPath();
       for (let gx = offsetX; gx < viewW; gx += gridSize) {
         ctx.moveTo(gx, 0);
@@ -3302,6 +3500,7 @@
       ctx.stroke();
 
       ctx.save();
+      ctx.scale(safeZoom, safeZoom);
       ctx.translate(-camX, -camY);
 
       for (const p of currentCourse.platforms) {
@@ -3383,70 +3582,178 @@
 
     let lastFrame = performance.now();
     function loop(now) {
-      const dt = Math.min(0.05, (now - lastFrame) / 1000);
-      lastFrame = now;
-      updatePhysics(dt, now / 1000);
-      render();
+      try {
+        const dt = Math.min(0.05, Math.max(0.001, (now - lastFrame) / 1000));
+        lastFrame = now;
+        updatePhysics(dt, now / 1000);
+        render();
+      } catch (err) {}
       requestAnimationFrame(loop);
     }
     requestAnimationFrame(loop);
 
     // ==========================================
-    // 10. UI 버튼 연결 & 초기화
+    // 10. 보장된 단일 DOM 초기화 및 버튼 이벤트 바인딩
     // ==========================================
-    document.getElementById("btn-create-room").addEventListener("click", () => {
-      const newCode = generate5CharCode();
-      connectRoomOrQueue("CUSTOM_HOST", newCode);
-    });
+    let appInitialized = false;
 
-    document.getElementById("btn-join-room").addEventListener("click", () => {
-      const raw = document.getElementById("room-code-input").value.trim().toUpperCase();
-      if (raw.length !== 5) {
-        document.getElementById("match-status").textContent = "⚠️ 5자리 방 코드를 정확히 입력해 주세요!";
-        return;
+    function initializeApp() {
+      if (appInitialized) return;
+      appInitialized = true;
+
+      try { SoundEngine.updateToggleButtonsUI(); } catch (e) {}
+      try { updateGoldDisplays(); } catch (e) {}
+      try { updateWideViewToggleUI(); } catch (e) {}
+      try { resizeCanvas(); } catch (e) {}
+      try { renderSkinGrid(); } catch (e) {}
+      try { renderFriendsList(); } catch (e) {}
+
+      const nickInput = document.getElementById("nickname-input");
+      const nickBadge = document.getElementById("nickname-saved-badge");
+      if (nickInput) {
+        nickInput.value = myNickname;
+        nickInput.addEventListener("input", () => {
+          const raw = nickInput.value.trim().slice(0, 10);
+          if (raw) {
+            myNickname = raw;
+            safeSetStorage("parkour_nickname", myNickname);
+            if (nickBadge) nickBadge.textContent = "✅ 저장됨 (" + myNickname + ")";
+            syncInviteSubscription();
+          } else if (nickBadge) {
+            nickBadge.textContent = "⚠️ 공백 시 기존 닉네임 유지";
+          }
+        });
+
+        nickInput.addEventListener("blur", () => {
+          myNickname = getSanitizedNickname();
+          nickInput.value = myNickname;
+          safeSetStorage("parkour_nickname", myNickname);
+          if (nickBadge) nickBadge.textContent = "✅ 자동 저장됨";
+          syncInviteSubscription();
+          publishLobbyPresence();
+        });
       }
-      connectRoomOrQueue("CUSTOM_GUEST", raw);
-    });
 
-    document.getElementById("btn-copy-code").addEventListener("click", () => {
-      if (!activeRoomCode) return;
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(activeRoomCode).catch(() => {});
-      } else {
-        const tmp = document.createElement("textarea");
-        tmp.value = activeRoomCode;
-        document.body.appendChild(tmp);
-        tmp.select();
-        try { document.execCommand("copy"); } catch (e) {}
-        document.body.removeChild(tmp);
+      const bindClick = (id, handler) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener("click", (e) => {
+            try {
+              handler(e);
+            } catch (err) {}
+          });
+        }
+      };
+
+      bindClick("btn-sound-hud", () => SoundEngine.toggleMute());
+      bindClick("btn-sound-lobby", () => SoundEngine.toggleMute());
+      bindClick("btn-wide-hud", toggleWideView);
+      bindClick("btn-wide-view", toggleWideView);
+
+      bindClick("btn-create-room", () => {
+        const newCode = generate5CharCode();
+        connectRoomOrQueue("CUSTOM_HOST", newCode);
+      });
+
+      bindClick("btn-join-room", () => {
+        const codeInput = document.getElementById("room-code-input");
+        const raw = codeInput ? codeInput.value.trim().toUpperCase() : "";
+        if (raw.length !== 5) {
+          const statusEl = document.getElementById("match-status");
+          if (statusEl) statusEl.textContent = "⚠️ 5자리 방 코드를 정확히 입력해 주세요!";
+          return;
+        }
+        connectRoomOrQueue("CUSTOM_GUEST", raw);
+      });
+
+      bindClick("btn-copy-code", () => {
+        if (!activeRoomCode) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(activeRoomCode).catch(() => {});
+        } else {
+          const tmp = document.createElement("textarea");
+          tmp.value = activeRoomCode;
+          document.body.appendChild(tmp);
+          tmp.select();
+          try { document.execCommand("copy"); } catch (e) {}
+          document.body.removeChild(tmp);
+        }
+        const btn = document.getElementById("btn-copy-code");
+        if (btn) {
+          btn.textContent = "✅ 복사됨!";
+          setTimeout(() => { btn.textContent = "📋 코드 복사"; }, 1500);
+        }
+      });
+
+      bindClick("btn-random-match", () => connectRoomOrQueue("ONLINE_RANDOM", ""));
+      bindClick("btn-bot-match", startBot10PMatch);
+      bindClick("btn-fill-now", launchOnline10PRoom);
+      bindClick("btn-exit-match", () => exitToLobby());
+      bindClick("btn-rematch", rematchRace);
+      bindClick("btn-result-lobby", () => exitToLobby());
+
+      bindClick("btn-accept-invite", acceptIncomingInvite);
+      bindClick("btn-decline-invite", hideInviteToast);
+
+      bindClick("btn-confirm-buy-skin", confirmBuySkin);
+      bindClick("btn-cancel-buy-skin", closeSkinModal);
+
+      const buyModalEl = document.getElementById("skin-buy-modal");
+      if (buyModalEl) {
+        buyModalEl.addEventListener("click", (e) => {
+          if (e.target === buyModalEl) closeSkinModal();
+        });
       }
-      const btn = document.getElementById("btn-copy-code");
-      btn.textContent = "✅ 복사됨!";
-      setTimeout(() => { btn.textContent = "📋 코드 복사"; }, 1500);
-    });
 
-    document.getElementById("btn-random-match").addEventListener("click", () => {
-      connectRoomOrQueue("ONLINE_RANDOM", "");
-    });
+      bindTouchOrMouseAction(document.getElementById("btn-left"), "left");
+      bindTouchOrMouseAction(document.getElementById("btn-right"), "right");
+      bindTouchOrMouseAction(document.getElementById("btn-jump"), "jump", () => tryJump());
+      bindTouchOrMouseAction(document.getElementById("btn-dash"), "dash", () => tryDash());
 
-    document.getElementById("btn-bot-match").addEventListener("click", startBot10PMatch);
-    document.getElementById("btn-fill-now").addEventListener("click", launchOnline10PRoom);
+      window.addEventListener("keydown", (e) => {
+        if (document.activeElement && document.activeElement.tagName === "INPUT") return;
+        if (e.code === "ArrowLeft" || e.code === "KeyA") input.left = true;
+        if (e.code === "ArrowRight" || e.code === "KeyD") input.right = true;
+        if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") {
+          if (!input.jump) tryJump();
+          input.jump = true;
+        }
+        if (e.code === "ShiftLeft" || e.code === "ShiftRight" || e.code === "KeyE") {
+          if (!input.dash) tryDash();
+          input.dash = true;
+        }
+      });
 
-    document.getElementById("btn-exit-match").addEventListener("click", () => {
-      transitionToLobby();
-    });
+      window.addEventListener("keyup", (e) => {
+        if (e.code === "ArrowLeft" || e.code === "KeyA") input.left = false;
+        if (e.code === "ArrowRight" || e.code === "KeyD") input.right = false;
+        if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") input.jump = false;
+        if (e.code === "ShiftLeft" || e.code === "ShiftRight" || e.code === "KeyE") input.dash = false;
+      });
 
-    document.getElementById("btn-rematch").addEventListener("click", () => {
-      if (matchMode === "ONLINE_RANDOM") connectRoomOrQueue("ONLINE_RANDOM", "");
-      else if (matchMode === "CUSTOM_HOST" && activeRoomCode) connectRoomOrQueue("CUSTOM_HOST", activeRoomCode);
-      else startBot10PMatch();
-    });
+      window.addEventListener("blur", resetInputs);
 
-    document.getElementById("btn-result-lobby").addEventListener("click", () => {
-      transitionToLobby();
-    });
+      ["pointerdown", "touchstart", "keydown"].forEach(evtName => {
+        window.addEventListener(evtName, () => SoundEngine.unlockAndStart(), { passive: true });
+      });
 
-    initPersistentLobbyPresence();
+      window.addEventListener("resize", resizeCanvas);
+      if (window.ResizeObserver) {
+        const wrapperEl = document.getElementById("game-wrapper");
+        if (wrapperEl) {
+          new ResizeObserver(resizeCanvas).observe(wrapperEl);
+        }
+      }
+
+      showScreen("LOBBY");
+      try { initPersistentLobbyPresence(); } catch (e) {}
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initializeApp, { once: true });
+    } else {
+      initializeApp();
+    }
   </script>
 </body>
   </html>
