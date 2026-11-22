@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>PARKOUR RUSH 10P - 방 인원끼리 바로 시작 레이스</title>
+  <title>PARKOUR RUSH 10P - 스피드전·아이템전·1분전 파쿠르 레이스</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <style>
@@ -100,6 +100,11 @@
       color: #fff;
       font-size: 13px;
       font-weight: 900;
+    }
+    .timer-urgent {
+      border-color: #f87171 !important;
+      background: rgba(127, 29, 29, 0.92) !important;
+      color: #fecaca !important;
     }
     #btn-exit-match {
       position: relative;
@@ -383,6 +388,63 @@
       font-weight: 700;
       color: #34d399;
       white-space: nowrap;
+    }
+
+    /* 3가지 레이스 모드 선택 카드 (스피드전 / 아이템전 / 1분전) */
+    .mode-selector-box {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+    }
+    .mode-selector-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #e2e8f0;
+      flex-wrap: wrap;
+    }
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .mode-card {
+      background: #1e293b;
+      border: 2px solid #334155;
+      border-radius: 11px;
+      padding: 8px 10px;
+      text-align: left;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: transform 0.1s, border-color 0.15s, background 0.15s;
+    }
+    .mode-card:hover {
+      border-color: #64748b;
+    }
+    .mode-card:active {
+      transform: scale(0.98);
+    }
+    .mode-card.active {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.16);
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.22);
+    }
+    .mode-card-title {
+      font-size: 13px;
+      font-weight: 900;
+      color: #f8fafc;
+      margin-bottom: 2px;
+    }
+    .mode-card-desc {
+      font-size: 10px;
+      color: #94a3b8;
+      line-height: 1.35;
     }
 
     /* 로비 친구 칸 */
@@ -929,18 +991,19 @@
     }
     .ctrl-group {
       display: flex;
-      gap: 14px;
+      gap: 12px;
+      align-items: flex-end;
       pointer-events: none;
     }
     .touch-btn {
       pointer-events: auto;
-      width: 78px;
-      height: 78px;
+      width: 74px;
+      height: 74px;
       border-radius: 50%;
       background: rgba(15, 23, 42, 0.72);
       border: 3px solid rgba(255, 255, 255, 0.35);
       color: #fff;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 900;
       display: flex;
       flex-direction: column;
@@ -955,9 +1018,23 @@
       background: rgba(56, 189, 248, 0.55);
       border-color: #38bdf8;
     }
+    #btn-item {
+      width: 78px;
+      height: 78px;
+      border-color: rgba(192, 132, 252, 0.75);
+      background: rgba(88, 28, 135, 0.72);
+    }
+    #btn-item.has-item {
+      border-color: #facc15;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.9), rgba(236, 72, 153, 0.9));
+      box-shadow: 0 0 18px rgba(250, 204, 21, 0.55);
+    }
+    #btn-item.empty-item {
+      opacity: 0.45;
+    }
     #btn-jump {
-      width: 84px;
-      height: 84px;
+      width: 80px;
+      height: 80px;
       border-color: rgba(52, 211, 153, 0.65);
     }
     #btn-jump.pressed {
@@ -965,8 +1042,8 @@
       border-color: #34d399;
     }
     #btn-dash {
-      width: 76px;
-      height: 76px;
+      width: 72px;
+      height: 72px;
       border-color: rgba(251, 191, 36, 0.7);
       position: relative;
     }
@@ -979,10 +1056,12 @@
       border-color: #fbbf24;
     }
     .sub-cd {
-      font-size: 11px;
-      font-weight: 700;
+      font-size: 10px;
+      font-weight: 800;
       color: #fde047;
       margin-top: 2px;
+      text-align: center;
+      line-height: 1.1;
     }
   </style>
 </head>
@@ -1020,7 +1099,7 @@
         <div class="hud-badge rank-badge" id="hud-rank">🏅 1위 / 10명</div>
         <div class="hud-badge" id="hud-map">🗺️ 맵: 대기 중</div>
         <div class="hud-badge" id="hud-timer">⏱️ 00.00s</div>
-        <div class="hud-badge" id="hud-mode">파쿠르 레이스</div>
+        <div class="hud-badge" id="hud-mode">⚡ 스피드 전</div>
         <div style="display:flex;gap:6px;align-items:center;pointer-events:auto;">
           <button id="btn-wide-hud" class="wide-view-btn" type="button" title="레이스 카메라 시야 넓게/기본 전환">🔭 시야 넓게</button>
           <button id="btn-sound-hud" class="sound-toggle-btn" type="button" title="배경음 및 효과음 켜기/끄기">🔊 소리 ON</button>
@@ -1046,6 +1125,10 @@
         <button type="button" class="touch-btn" id="btn-right">▶</button>
       </div>
       <div class="ctrl-group">
+        <button type="button" class="touch-btn empty-item" id="btn-item" title="아이템 사용 (키보드 F / Enter)">
+          <span id="item-btn-icon">🎁</span>
+          <span class="sub-cd" id="item-btn-label">없음</span>
+        </button>
         <button type="button" class="touch-btn" id="btn-dash">
           <span>DASH</span>
           <span class="sub-cd" id="dash-cd-text">READY</span>
@@ -1058,7 +1141,7 @@
     <div id="lobby-screen" class="overlay-screen" style="display:flex;">
       <div class="panel">
         <div class="title">PARKOUR RUSH 10P</div>
-        <div class="subtitle">친구 클릭 즉시 초대 &amp; 수락 자동 입장 · 방 인원끼리 바로 시작 · 10인 랜덤 매치</div>
+        <div class="subtitle">스피드전 · 아이템전 · 1분전 · 친구 클릭 즉시 초대 · 방 인원끼리 바로 시작</div>
 
         <!-- 닉네임 입력 및 자동 저장 -->
         <div class="nickname-box">
@@ -1070,6 +1153,28 @@
             <span class="gold-badge" id="lobby-gold-display">💰 100G</span>
             <span id="nickname-saved-badge">✅ 자동 저장됨</span>
             <button id="btn-sound-lobby" class="sound-toggle-btn" type="button" title="배경음 및 효과음 켜기/끄기">🔊 소리 ON</button>
+          </div>
+        </div>
+
+        <!-- 3가지 게임 모드 선택 (스피드 전 / 아이템 전 / 1분 전) -->
+        <div class="mode-selector-box">
+          <div class="mode-selector-header">
+            <span>🏁 레이스 모드 선택</span>
+            <span id="selected-mode-label" style="color:#38bdf8;">⚡ 스피드 전</span>
+          </div>
+          <div class="mode-grid" id="mode-grid">
+            <button type="button" class="mode-card active" data-mode="SPEED" id="mode-card-SPEED">
+              <div class="mode-card-title">⚡ 스피드 전</div>
+              <div class="mode-card-desc">결승선까지 누가 더 빨리 도착하는지 겨루는 순수 속도 레이스!</div>
+            </button>
+            <button type="button" class="mode-card" data-mode="ITEM" id="mode-card-ITEM">
+              <div class="mode-card-title">🎁 아이템 전</div>
+              <div class="mode-card-desc">랜덤 아이템 박스를 먹고 부스터·로켓·방패 능력을 사용하세요!</div>
+            </button>
+            <button type="button" class="mode-card" data-mode="TIME_1M" id="mode-card-TIME_1M">
+              <div class="mode-card-title">⏳ 1분 전</div>
+              <div class="mode-card-desc">제한시간 60초 동안 누가 더 멀리 전진하는지 겨루는 타임 레이스!</div>
+            </button>
           </div>
         </div>
 
@@ -1367,6 +1472,22 @@
         playTone(1318.51, "sine", 0.22, now + 0.08, 0.10);
       }
 
+      function playItemPickup() {
+        const ac = ensureContext();
+        if (!ac || isMuted) return;
+        const now = ac.currentTime;
+        playTone(587.33, "triangle", 0.09, now, 0.09, 880);
+        playTone(880, "sine", 0.14, now + 0.07, 0.09, 1174.66);
+      }
+
+      function playItemUse() {
+        const ac = ensureContext();
+        if (!ac || isMuted) return;
+        const now = ac.currentTime;
+        playTone(440, "sawtooth", 0.16, now, 0.09, 1240);
+        playTone(659.25, "triangle", 0.20, now + 0.05, 0.10, 1567.98);
+      }
+
       return {
         unlockAndStart,
         toggleMute,
@@ -1374,13 +1495,58 @@
         playJump,
         playSuperJump,
         playDeath,
-        playCoin
+        playCoin,
+        playItemPickup,
+        playItemUse
       };
     })();
 
     // ==========================================
-    // 1. 10가지 캐릭터 스킨 데이터 & 골드 상점
+    // 1. 게임 모드 정의 & 10가지 캐릭터 스킨 데이터
     // ==========================================
+    const GAME_MODES = {
+      SPEED: {
+        id: "SPEED",
+        label: "⚡ 스피드 전",
+        shortDesc: "결승선까지 가장 먼저 도착하는 순위 레이스"
+      },
+      ITEM: {
+        id: "ITEM",
+        label: "🎁 아이템 전",
+        shortDesc: "랜덤 아이템 박스로 부스터·로켓·방패 능력을 사용"
+      },
+      TIME_1M: {
+        id: "TIME_1M",
+        label: "⏳ 1분 전",
+        shortDesc: "60초 제한시간 동안 가장 멀리 도달한 거리 승부"
+      }
+    };
+
+    const TIME_1M_DURATION = 60.0;
+    let selectedGameMode = safeGetStorage("parkour_game_mode", "SPEED");
+    if (!GAME_MODES[selectedGameMode]) selectedGameMode = "SPEED";
+    let activeRaceMode = selectedGameMode;
+
+    function selectRaceMode(modeId) {
+      if (!GAME_MODES[modeId]) return;
+      selectedGameMode = modeId;
+      safeSetStorage("parkour_game_mode", modeId);
+      renderModeSelectorUI();
+    }
+
+    function renderModeSelectorUI() {
+      const labelEl = document.getElementById("selected-mode-label");
+      if (labelEl && GAME_MODES[selectedGameMode]) {
+        labelEl.textContent = GAME_MODES[selectedGameMode].label;
+      }
+      ["SPEED", "ITEM", "TIME_1M"].forEach(m => {
+        const card = document.getElementById("mode-card-" + m);
+        if (card) {
+          card.classList.toggle("active", selectedGameMode === m);
+        }
+      });
+    }
+
     const INITIAL_GOLD = 100;
     const TOP3_REWARD_GOLD = 50;
     const STANDARD_SKIN_PRICE = 100;
@@ -1759,6 +1925,7 @@
         lobbyMqtt.publish(LOBBY_PRESENCE_TOPIC, JSON.stringify({
           nick: myNickname,
           skin: selectedSkinId,
+          mode: selectedGameMode,
           status: gameState,
           roomCode: activeRoomCode || "",
           ts: Date.now()
@@ -1875,7 +2042,7 @@
     }
 
     // ==========================================
-    // 4. 12가지 랜덤 맵 생성기
+    // 4. 12가지 랜덤 맵 & 아이템 박스 생성기
     // ==========================================
     const MAP_THEMES = [
       { id: 0, name: "1. 초원의 시작", bgTop: "#0f172a", bgBot: "#1e3a5f", plat: "#22c55e", platTop: "#86efac", hazard: "#ef4444" },
@@ -1892,6 +2059,13 @@
       { id: 11, name: "12. 최종 시련", bgTop: "#1e1b4b", bgBot: "#4c0519", plat: "#f43f5e", platTop: "#fecdd3", hazard: "#facc15" }
     ];
 
+    const ITEM_TYPES = {
+      BOOSTER: { id: "BOOSTER", icon: "⚡", shortName: "부스터", label: "⚡ 부스터 대시" },
+      ROCKET: { id: "ROCKET", icon: "🚀", shortName: "로켓", label: "🚀 로켓 부스트" },
+      SHIELD: { id: "SHIELD", icon: "🛡️", shortName: "방패", label: "🛡️ 방패 보호막" }
+    };
+    const ITEM_TYPE_KEYS = Object.keys(ITEM_TYPES);
+
     function mulberry32(seed) {
       return function() {
         let t = seed += 0x6D2B79F5;
@@ -1901,27 +2075,28 @@
       };
     }
 
-    function buildCourse(mapIndex, seed) {
+    function buildCourse(mapIndex, seed, includeItemBoxes = true) {
       const theme = MAP_THEMES[Math.abs(mapIndex) % MAP_THEMES.length];
       const rand = mulberry32(seed);
       const platforms = [];
       const hazards = [];
       const springs = [];
       const checkpoints = [];
+      const itemBoxes = [];
 
       platforms.push({ x: -120, y: 420, w: 520, h: 80, moveX: 0, moveY: 0, speed: 0, baseX: -120, baseY: 420 });
       checkpoints.push({ x: 80, y: 380 });
 
       let curX = 460;
       let curY = 400;
-      const totalSegments = 24;
+      const totalSegments = 26;
 
       for (let i = 0; i < totalSegments; i++) {
         const gap = 85 + Math.floor(rand() * 85);
-        const w = (mapIndex === 2 ? 105 : 130) + Math.floor(rand() * 95);
-        const deltaY = Math.floor((rand() - 0.52) * 120);
+        const w = (mapIndex === 2 ? 110 : 135) + Math.floor(rand() * 95);
+        const deltaY = Math.floor((rand() - 0.52) * 115);
         curX += gap;
-        curY = Math.max(160, Math.min(540, curY + deltaY));
+        curY = Math.max(165, Math.min(535, curY + deltaY));
 
         let moveX = 0, moveY = 0, speed = 0;
         if (mapIndex === 3 || (i % 4 === 2 && rand() > 0.35)) {
@@ -1929,11 +2104,12 @@
           else { moveY = 45; speed = 2.0; }
         }
 
-        platforms.push({
+        const platObj = {
           x: curX, y: curY, w, h: 36,
           baseX: curX, baseY: curY,
           moveX, moveY, speed
-        });
+        };
+        platforms.push(platObj);
 
         if (mapIndex === 5 || (i % 5 === 3 && rand() > 0.3)) {
           springs.push({ x: curX + w * 0.5 - 18, y: curY - 14, w: 36, h: 14 });
@@ -1943,7 +2119,25 @@
           hazards.push({ x: curX + w * 0.45, y: curY - 14, w: 32, h: 14 });
         }
 
-        if (i === 6 || i === 12 || i === 18) {
+        if (includeItemBoxes && i % 2 === 0) {
+          const boxX = curX + w * 0.5 - 14;
+          const boxY = curY - 46;
+          const randomType = ITEM_TYPE_KEYS[Math.floor(rand() * ITEM_TYPE_KEYS.length)];
+          itemBoxes.push({
+            id: "ITEM_" + i,
+            x: boxX,
+            y: boxY,
+            baseY: boxY,
+            w: 28,
+            h: 28,
+            itemType: randomType,
+            active: true,
+            respawnTimer: 0,
+            phase: rand() * Math.PI * 2
+          });
+        }
+
+        if (i === 6 || i === 12 || i === 18 || i === 24) {
           checkpoints.push({ x: curX + w * 0.5, y: curY - 40 });
         }
 
@@ -1959,7 +2153,7 @@
       });
 
       const goal = { x: finishX + 160, y: finishY - 110, w: 24, h: 110 };
-      return { theme, platforms, hazards, springs, checkpoints, goal, startX: 80, startY: 360 };
+      return { theme, platforms, hazards, springs, checkpoints, itemBoxes, goal, startX: 80, startY: 360 };
     }
 
     // ==========================================
@@ -2015,13 +2209,14 @@
     // ==========================================
     // 6. 중앙 화면 전환 및 입력 처리
     // ==========================================
-    const input = { left: false, right: false, jump: false, dash: false };
+    const input = { left: false, right: false, jump: false, dash: false, item: false };
 
     function resetInputs() {
       input.left = false;
       input.right = false;
       input.jump = false;
       input.dash = false;
+      input.item = false;
       document.querySelectorAll(".touch-btn").forEach(b => b.classList.remove("pressed"));
     }
 
@@ -2105,12 +2300,13 @@
     }
 
     // ==========================================
-    // 7. 멀티플레이어 레이스 상태 & 물리 + 트레일/점프 이펙트
+    // 7. 멀티플레이어 레이스 상태 & 물리 + 아이템 & AI 봇 사망
     // ==========================================
-    let currentCourse = buildCourse(0, 12345);
+    let currentCourse = buildCourse(0, 12345, true);
     let matchMode = "BOT";
     let raceStartTime = 0;
     let elapsedTime = 0;
+    let remaining1MTime = TIME_1M_DURATION;
     let animClock = 0;
     let countdownInterval = null;
     let raceRewardClaimed = false;
@@ -2128,6 +2324,9 @@
       coyoteTimer: 0,
       dashCooldown: 0,
       dashActiveTimer: 0,
+      rocketTimer: 0,
+      shieldActive: false,
+      heldItem: null,
       walkPhase: 0,
       respawnX: 80, respawnY: 360,
       finished: false,
@@ -2135,6 +2334,68 @@
     };
 
     let racers = [];
+
+    function updateItemButtonUI() {
+      const btnItem = document.getElementById("btn-item");
+      const iconEl = document.getElementById("item-btn-icon");
+      const labelEl = document.getElementById("item-btn-label");
+      if (!btnItem || !iconEl || !labelEl) return;
+
+      if (activeRaceMode !== "ITEM") {
+        btnItem.classList.add("empty-item");
+        btnItem.classList.remove("has-item");
+        iconEl.textContent = "⚡";
+        labelEl.textContent = "아이템전전용";
+        return;
+      }
+
+      if (player.rocketTimer > 0) {
+        btnItem.classList.remove("empty-item", "has-item");
+        iconEl.textContent = "🚀";
+        labelEl.textContent = player.rocketTimer.toFixed(1) + "s";
+      } else if (player.shieldActive) {
+        btnItem.classList.remove("empty-item", "has-item");
+        iconEl.textContent = "🛡️";
+        labelEl.textContent = "보호중";
+      } else if (player.heldItem && ITEM_TYPES[player.heldItem]) {
+        const info = ITEM_TYPES[player.heldItem];
+        btnItem.classList.remove("empty-item");
+        btnItem.classList.add("has-item");
+        iconEl.textContent = info.icon;
+        labelEl.textContent = "사용!";
+      } else {
+        btnItem.classList.add("empty-item");
+        btnItem.classList.remove("has-item");
+        iconEl.textContent = "🎁";
+        labelEl.textContent = "없음";
+      }
+    }
+
+    function activateHeldItem() {
+      if (gameState !== "RACING" || activeRaceMode !== "ITEM") return;
+      if (!player.heldItem || !ITEM_TYPES[player.heldItem]) return;
+
+      const itemType = player.heldItem;
+      player.heldItem = null;
+      SoundEngine.playItemUse();
+      triggerVibration([35, 20, 45]);
+
+      if (itemType === "BOOSTER") {
+        player.dashActiveTimer = 0.34;
+        player.vx = player.facing * 980;
+        player.vy = Math.min(player.vy, -140);
+        emitBackTrailBurst(player.x + player.w * 0.5, player.y + player.h * 0.45, player.facing, selectedSkinId, 18, true);
+      } else if (itemType === "ROCKET") {
+        player.rocketTimer = 1.45;
+        player.vy = -120;
+        emitBackTrailBurst(player.x + player.w * 0.5, player.y + player.h * 0.45, 1, selectedSkinId, 20, true);
+      } else if (itemType === "SHIELD") {
+        player.shieldActive = true;
+        spawnJumpBurst(player.x + player.w * 0.5, player.y + player.h, selectedSkinId, true);
+      }
+
+      updateItemButtonUI();
+    }
 
     function getTotalParticipants() {
       return 1 + racers.length;
@@ -2152,14 +2413,19 @@
           y: currentCourse.startY,
           targetX: currentCourse.startX,
           targetY: currentCourse.startY,
+          respawnX: currentCourse.startX,
+          respawnY: currentCourse.startY,
           w: 30, h: 42,
           facing: 1,
           grounded: true,
           prevGrounded: true,
           dashing: false,
+          shieldActive: false,
+          deadFlashTimer: 0,
+          deathCooldown: 1.6 + i * 0.45 + Math.random() * 1.4,
           walkPhase: i * 1.1,
           skinId: (selectedSkinId + i + 1) % SKINS.length,
-          baseSpeed: 285 + (i % 5) * 16 + Math.random() * 18,
+          baseSpeed: 280 + (i % 5) * 15 + Math.random() * 16,
           jumpPhase: Math.random() * Math.PI * 2,
           progress: 0,
           finished: false,
@@ -2167,6 +2433,18 @@
         });
       }
       return list;
+    }
+
+    function triggerBotDeath(bot) {
+      spawnJumpBurst(bot.x + bot.w * 0.5, bot.y + bot.h * 0.6, bot.skinId, true);
+      emitBackTrailBurst(bot.x + bot.w * 0.5, bot.y + bot.h * 0.5, bot.facing, bot.skinId, 12, true);
+      bot.x = bot.respawnX;
+      bot.y = bot.respawnY;
+      bot.grounded = true;
+      bot.prevGrounded = true;
+      bot.deadFlashTimer = 0.65;
+      bot.deathCooldown = 3.2 + Math.random() * 3.8;
+      bot.progress = getProgress(bot.x);
     }
 
     function setupProgressMarkers() {
@@ -2194,6 +2472,9 @@
       player.grounded = false;
       player.dashCooldown = 0;
       player.dashActiveTimer = 0;
+      player.rocketTimer = 0;
+      player.shieldActive = false;
+      player.heldItem = null;
       player.walkPhase = 0;
       player.respawnX = course.startX;
       player.respawnY = course.startY;
@@ -2203,16 +2484,22 @@
       jumpRingEffects = [];
       backTrailSpawnAcc = 0;
       racerTrailSpawnAcc.clear();
+      updateItemButtonUI();
 
       racers.forEach((r, idx) => {
         r.x = course.startX;
         r.y = course.startY;
         r.targetX = course.startX;
         r.targetY = course.startY;
+        r.respawnX = course.startX;
+        r.respawnY = course.startY;
         r.facing = 1;
         r.grounded = true;
         r.prevGrounded = true;
         r.dashing = false;
+        r.shieldActive = false;
+        r.deadFlashTimer = 0;
+        r.deathCooldown = 1.5 + idx * 0.4 + Math.random() * 1.5;
         r.progress = 0;
         r.finished = false;
         r.finishTime = null;
@@ -2454,7 +2741,7 @@
     }
 
     // ==========================================
-    // 8. 5자리 방 코드 & 실시간 매칭 (안전한 화면 전환)
+    // 8. 5자리 방 코드 & 실시간 매칭
     // ==========================================
     let mqttClient = null;
     let peer = null;
@@ -2510,15 +2797,20 @@
       resetInputs();
       gameState = "LOBBY";
       elapsedTime = 0;
+      remaining1MTime = TIME_1M_DURATION;
       const timerEl = document.getElementById("hud-timer");
       const progEl = document.getElementById("progress-me");
       const markerEl = document.getElementById("marker-me");
-      if (timerEl) timerEl.textContent = "⏱️ 00.00s";
+      if (timerEl) {
+        timerEl.classList.remove("timer-urgent");
+        timerEl.textContent = "⏱️ 00.00s";
+      }
       if (progEl) progEl.style.width = "0%";
       if (markerEl) markerEl.style.left = "0%";
 
       publishLobbyPresence();
       updateGoldDisplays();
+      renderModeSelectorUI();
       renderSkinGrid();
       renderFriendsList();
       showScreen("LOBBY");
@@ -2569,7 +2861,7 @@
       updateHostStartButtonUI();
     }
 
-    function startMatchSequence(mapIdx, seed, modeLabel, onlinePeersList, fillBots = true) {
+    function startMatchSequence(mapIdx, seed, modeLabel, onlinePeersList, fillBots = true, raceModeOverride = null) {
       if (matchLoopTimer) { clearInterval(matchLoopTimer); matchLoopTimer = null; }
       if (autoFillTimer) { clearInterval(autoFillTimer); autoFillTimer = null; }
       if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
@@ -2596,11 +2888,20 @@
       safeSetStorage("parkour_nickname", myNickname);
       raceRewardClaimed = false;
       elapsedTime = 0;
+      remaining1MTime = TIME_1M_DURATION;
+
+      activeRaceMode = (raceModeOverride && GAME_MODES[raceModeOverride])
+        ? raceModeOverride
+        : selectedGameMode;
+
       const timerEl = document.getElementById("hud-timer");
-      if (timerEl) timerEl.textContent = "⏱️ 00.00s";
+      if (timerEl) {
+        timerEl.classList.remove("timer-urgent");
+        timerEl.textContent = activeRaceMode === "TIME_1M" ? "⏳ 60.00s" : "⏱️ 00.00s";
+      }
 
       gameState = "COUNTDOWN";
-      currentCourse = buildCourse(mapIdx, seed);
+      currentCourse = buildCourse(mapIdx, seed, activeRaceMode === "ITEM");
 
       const builtRacers = [];
       (onlinePeersList || []).slice(0, 9).forEach((pInfo, idx) => {
@@ -2612,11 +2913,16 @@
           y: currentCourse.startY,
           targetX: currentCourse.startX,
           targetY: currentCourse.startY,
+          respawnX: currentCourse.startX,
+          respawnY: currentCourse.startY,
           w: 30, h: 42,
           facing: 1,
           grounded: true,
           prevGrounded: true,
           dashing: false,
+          shieldActive: false,
+          deadFlashTimer: 0,
+          deathCooldown: 999,
           walkPhase: idx * 0.8,
           skinId: pInfo.skin ?? ((idx + 1) % SKINS.length),
           progress: 0,
@@ -2644,7 +2950,7 @@
       if (rankEl) rankEl.textContent = `🏅 1위 / ${totalCount}명`;
       if (markerMeEl) markerMeEl.textContent = myNickname.slice(0, 2);
       if (mapEl) mapEl.textContent = "🗺️ " + currentCourse.theme.name;
-      if (modeEl) modeEl.textContent = modeLabel;
+      if (modeEl) modeEl.textContent = `${GAME_MODES[activeRaceMode].label} · ${modeLabel}`;
 
       showScreen("COUNTDOWN");
 
@@ -2687,7 +2993,7 @@
       matchMode = "BOT";
       const randomMap = Math.floor(Math.random() * 12);
       const seed = Math.floor(Math.random() * 999999);
-      startMatchSequence(randomMap, seed, "🤖 10인 연습 레이스", [], true);
+      startMatchSequence(randomMap, seed, "10인 연습", [], true, selectedGameMode);
     }
 
     function launchOnline10PRoom() {
@@ -2707,13 +3013,14 @@
       const mapIdx = Math.floor(Math.random() * 12);
       const seed = Math.floor(Math.random() * 999999);
       const label = activeRoomCode
-        ? `🏠 방 [${activeRoomCode}] · ${totalPlayersInRace}명 레이스`
-        : "🌐 10인 실시간 레이스";
+        ? `방 [${activeRoomCode}] · ${totalPlayersInRace}명`
+        : "10인 실시간";
 
       const startPacket = {
         type: "START_10P",
         mapIdx,
         seed,
+        raceMode: selectedGameMode,
         roomCode: activeRoomCode,
         fillBots: shouldFillBots,
         roster: rosterList
@@ -2732,7 +3039,7 @@
       }
 
       if (mqttClient) { try { mqttClient.end(true); } catch (e) {} mqttClient = null; }
-      startMatchSequence(mapIdx, seed, label, others, shouldFillBots);
+      startMatchSequence(mapIdx, seed, label, others, shouldFillBots, selectedGameMode);
     }
 
     function connectRoomOrQueue(mode, roomCode) {
@@ -2765,9 +3072,10 @@
       }
 
       if (statusEl) {
+        const modeText = GAME_MODES[selectedGameMode]?.label || "⚡ 스피드 전";
         statusEl.textContent = activeRoomCode
-          ? `🏠 방 [${activeRoomCode}] 대기 중 · 바로 시작하려면 '지금 출발하기'를 누르세요!`
-          : "🌐 10인 매치 대기 중 · '지금 출발하기'로 즉시 시작하거나 상대를 기다리세요!";
+          ? `🏠 방 [${activeRoomCode}] (${modeText}) 대기 중 · '지금 시작하기'로 바로 시작!`
+          : `🌐 10인 매치 (${modeText}) 대기 중 · '지금 출발하기'로 즉시 시작할 수 있습니다!`;
       }
 
       if (typeof Peer === "undefined" || typeof mqtt === "undefined") {
@@ -2868,9 +3176,9 @@
             const fillBots = msg.fillBots !== false;
             const totalCount = fillBots ? 10 : (1 + others.length);
             const label = msg.roomCode
-              ? `🏠 방 [${msg.roomCode}] · ${totalCount}명 레이스`
-              : "🌐 10인 실시간 레이스";
-            startMatchSequence(msg.mapIdx, msg.seed, label, others, fillBots);
+              ? `방 [${msg.roomCode}] · ${totalCount}명`
+              : "10인 실시간";
+            startMatchSequence(msg.mapIdx, msg.seed, label, others, fillBots, msg.raceMode || "SPEED");
           }
         } catch (e) {}
       });
@@ -2895,7 +3203,8 @@
                 y: Math.round(player.y),
                 facing: player.facing,
                 grounded: player.grounded,
-                dashing: player.dashActiveTimer > 0,
+                dashing: player.dashActiveTimer > 0 || player.rocketTimer > 0,
+                shieldActive: player.shieldActive,
                 progress: getProgress(player.x),
                 finished: player.finished,
                 finishTime: player.finishTime
@@ -2928,9 +3237,9 @@
             const fillBots = data.fillBots !== false;
             const totalCount = fillBots ? 10 : (1 + others.length);
             const label = data.roomCode
-              ? `🏠 방 [${data.roomCode}] · ${totalCount}명 레이스`
-              : "🌐 10인 실시간 레이스";
-            startMatchSequence(data.mapIdx, data.seed, label, others, fillBots);
+              ? `방 [${data.roomCode}] · ${totalCount}명`
+              : "10인 실시간";
+            startMatchSequence(data.mapIdx, data.seed, label, others, fillBots, data.raceMode || "SPEED");
           }
         } else if (data.type === "POS10") {
           const targetRacer = racers.find(r => r.id === data.id);
@@ -2947,6 +3256,7 @@
               targetRacer.grounded = data.grounded;
             }
             if (typeof data.dashing === "boolean") targetRacer.dashing = data.dashing;
+            if (typeof data.shieldActive === "boolean") targetRacer.shieldActive = data.shieldActive;
             targetRacer.progress = data.progress || 0;
             if (data.finished && !targetRacer.finished) {
               targetRacer.finished = true;
@@ -2992,10 +3302,17 @@
       ];
 
       all.sort((a, b) => {
+        if (activeRaceMode === "SPEED") {
+          if (a.finished && b.finished) return (a.finishTime || 0) - (b.finishTime || 0);
+          if (a.finished) return -1;
+          if (b.finished) return 1;
+          return b.progress - a.progress;
+        }
+        if (Math.abs(b.progress - a.progress) > 0.01) {
+          return b.progress - a.progress;
+        }
         if (a.finished && b.finished) return (a.finishTime || 0) - (b.finishTime || 0);
-        if (a.finished) return -1;
-        if (b.finished) return 1;
-        return b.progress - a.progress;
+        return 0;
       });
       return all;
     }
@@ -3030,16 +3347,23 @@
       const iconEl = document.getElementById("result-icon");
       const titleEl = document.getElementById("result-title");
       const descEl = document.getElementById("result-desc");
+      const modeTitle = GAME_MODES[activeRaceMode]?.label || "⚡ 스피드 전";
+      const recordText = activeRaceMode === "TIME_1M"
+        ? `도달 거리: ${Math.floor(getProgress(player.x))}%`
+        : `완주 기록: ${elapsedTime.toFixed(2)}초`;
+
       if (iconEl) iconEl.textContent = myRank === 1 ? "🏆" : (myRank <= 3 ? "🥈" : "🏁");
-      if (titleEl) titleEl.textContent = `${myNickname} · ${myRank}위 완주!`;
-      if (descEl) descEl.textContent = `총 ${totalCount}명 중 ${myRank}위 · 완주 기록: ${elapsedTime.toFixed(2)}초`;
+      if (titleEl) titleEl.textContent = `${myNickname} · ${myRank}위!`;
+      if (descEl) descEl.textContent = `[${modeTitle}] 총 ${totalCount}명 중 ${myRank}위 · ${recordText}`;
 
       const lbEl = document.getElementById("leaderboard-list");
       if (lbEl) {
         lbEl.innerHTML = "";
 
         standings.forEach((s, idx) => {
-          const statusStr = s.finished ? `${(s.finishTime || elapsedTime).toFixed(2)}s` : `${Math.floor(s.progress)}% 주행중`;
+          const statusStr = activeRaceMode === "TIME_1M"
+            ? `${Math.floor(s.progress)}% 도달`
+            : (s.finished ? `${(s.finishTime || elapsedTime).toFixed(2)}s` : `${Math.floor(s.progress)}% 주행중`);
           const row = document.createElement("div");
           row.className = "lb-row" + (s.isMe ? " me" : "");
 
@@ -3105,11 +3429,41 @@
         if (p.moveY !== 0) p.y = p.baseY + Math.cos(timeSec * p.speed) * p.moveY;
       }
 
+      if (activeRaceMode === "ITEM" && currentCourse.itemBoxes) {
+        for (const box of currentCourse.itemBoxes) {
+          box.y = box.baseY + Math.sin(timeSec * 4.2 + box.phase) * 5;
+          if (!box.active) {
+            box.respawnTimer -= dt;
+            if (box.respawnTimer <= 0) {
+              box.active = true;
+              box.itemType = ITEM_TYPE_KEYS[Math.floor(Math.random() * ITEM_TYPE_KEYS.length)];
+            }
+          }
+        }
+      }
+
       if (gameState !== "RACING") return;
 
       elapsedTime = (performance.now() - raceStartTime) / 1000;
       const timerEl = document.getElementById("hud-timer");
-      if (timerEl) timerEl.textContent = `⏱️ ${elapsedTime.toFixed(2)}s`;
+      if (activeRaceMode === "TIME_1M") {
+        remaining1MTime = Math.max(0, TIME_1M_DURATION - elapsedTime);
+        if (timerEl) {
+          timerEl.textContent = `⏳ ${remaining1MTime.toFixed(2)}s`;
+          if (remaining1MTime <= 10.0) {
+            timerEl.classList.add("timer-urgent");
+          } else {
+            timerEl.classList.remove("timer-urgent");
+          }
+        }
+        if (remaining1MTime <= 0) {
+          finishRace();
+          return;
+        }
+      } else if (timerEl) {
+        timerEl.classList.remove("timer-urgent");
+        timerEl.textContent = `⏱️ ${elapsedTime.toFixed(2)}s`;
+      }
 
       const dashBtn = document.getElementById("btn-dash");
       const dashCdText = document.getElementById("dash-cd-text");
@@ -3122,7 +3476,13 @@
         if (dashCdText) dashCdText.textContent = "READY";
       }
 
-      if (player.dashActiveTimer > 0) {
+      if (player.rocketTimer > 0) {
+        player.rocketTimer = Math.max(0, player.rocketTimer - dt);
+        player.facing = 1;
+        player.vx = 760;
+        player.vy *= Math.pow(0.08, dt);
+        if (player.rocketTimer === 0) updateItemButtonUI();
+      } else if (player.dashActiveTimer > 0) {
         player.dashActiveTimer -= dt;
       } else {
         const moveDir = (input.right ? 1 : 0) - (input.left ? 1 : 0);
@@ -3136,9 +3496,9 @@
       const speedAbs = Math.abs(player.vx);
       if (speedAbs > 18) {
         player.walkPhase += dt * (8 + speedAbs * 0.032);
-        const isDashing = player.dashActiveTimer > 0;
+        const isDashing = player.dashActiveTimer > 0 || player.rocketTimer > 0;
         const moveDirX = player.vx >= 0 ? 1 : -1;
-        const spawnRate = isDashing ? 55 : (24 + speedAbs * 0.05);
+        const spawnRate = isDashing ? 58 : (24 + speedAbs * 0.05);
         backTrailSpawnAcc += dt * spawnRate;
         const backX = (player.x + player.w * 0.5) - moveDirX * 13;
         const backY = player.y + player.h * 0.44;
@@ -3154,8 +3514,10 @@
         player.walkPhase += (nearestZero - mod) * Math.min(1, dt * 14);
       }
 
-      player.vy += 1550 * dt;
-      if (player.vy > 1100) player.vy = 1100;
+      if (player.rocketTimer <= 0) {
+        player.vy += 1550 * dt;
+        if (player.vy > 1100) player.vy = 1100;
+      }
 
       const prevBottom = player.y + player.h;
       player.x += player.vx * dt;
@@ -3176,6 +3538,27 @@
           player.y = p.y - player.h;
           player.vy = 0;
           player.grounded = true;
+        }
+      }
+
+      if (activeRaceMode === "ITEM" && currentCourse.itemBoxes) {
+        for (const box of currentCourse.itemBoxes) {
+          if (!box.active) continue;
+          if (
+            player.x + player.w > box.x &&
+            player.x < box.x + box.w &&
+            player.y + player.h > box.y &&
+            player.y < box.y + box.h
+          ) {
+            box.active = false;
+            box.respawnTimer = 6.5;
+            if (!player.heldItem && player.rocketTimer <= 0 && !player.shieldActive) {
+              player.heldItem = box.itemType;
+              updateItemButtonUI();
+            }
+            SoundEngine.playItemPickup();
+            spawnJumpBurst(box.x + box.w * 0.5, box.y + box.h, selectedSkinId, false);
+          }
         }
       }
 
@@ -3214,49 +3597,77 @@
         }
       }
       if (hitHazard || player.y > 860) {
-        player.x = player.respawnX;
-        player.y = player.respawnY;
-        player.vx = 0;
-        player.vy = 0;
-        SoundEngine.playDeath();
-        triggerVibration([70, 40, 90]);
+        if (hitHazard && player.shieldActive) {
+          player.shieldActive = false;
+          player.vy = -520;
+          updateItemButtonUI();
+          spawnJumpBurst(player.x + player.w * 0.5, player.y + player.h, selectedSkinId, true);
+          SoundEngine.playJump();
+        } else {
+          player.x = player.respawnX;
+          player.y = player.respawnY;
+          player.vx = 0;
+          player.vy = 0;
+          player.rocketTimer = 0;
+          updateItemButtonUI();
+          SoundEngine.playDeath();
+          triggerVibration([70, 40, 90]);
+        }
       }
 
       for (const r of racers) {
         if (r.isBot) {
-          if (!r.finished) {
-            r.x += r.baseSpeed * dt;
-            r.facing = 1;
-            r.walkPhase += dt * 16.5;
-            const prevAcc = racerTrailSpawnAcc.get(r.id) || 0;
-            let nextAcc = prevAcc + dt * 28;
-            const backX = (r.x + r.w * 0.5) - r.facing * 13;
-            const backY = r.y + r.h * 0.44;
-            while (nextAcc >= 1) {
-              nextAcc -= 1;
-              spawnBackTrailParticle(backX, backY, -r.facing, r.skinId, false);
-            }
-            racerTrailSpawnAcc.set(r.id, nextAcc);
-            let supportPlat = currentCourse.platforms[0];
-            for (const p of currentCourse.platforms) {
-              if (r.x + 15 >= p.x - 45 && r.x <= p.x + p.w + 45) {
-                supportPlat = p;
-              }
-            }
-            const jumpOffset = Math.abs(Math.sin(timeSec * 5 + r.jumpPhase)) * 52;
-            const desiredY = supportPlat.y - r.h - jumpOffset;
-            const nowGrounded = jumpOffset < 4;
-            if (r.prevGrounded && !nowGrounded) {
-              spawnJumpBurst(r.x + r.w * 0.5, supportPlat.y, r.skinId, false);
-            }
-            r.prevGrounded = nowGrounded;
-            r.grounded = nowGrounded;
-            r.y += (desiredY - r.y) * Math.min(1, dt * 8);
-            r.progress = getProgress(r.x);
+          if (r.deadFlashTimer > 0) {
+            r.deadFlashTimer = Math.max(0, r.deadFlashTimer - dt);
+          }
 
-            if (r.x >= currentCourse.goal.x) {
-              r.finished = true;
-              r.finishTime = elapsedTime;
+          if (!r.finished) {
+            r.deathCooldown -= dt;
+            if (r.deathCooldown <= 0 && r.x > currentCourse.startX + 120) {
+              triggerBotDeath(r);
+            } else {
+              r.x += r.baseSpeed * dt;
+              r.facing = 1;
+              r.walkPhase += dt * 16.5;
+
+              for (const cp of currentCourse.checkpoints) {
+                if (Math.abs((r.x + r.w * 0.5) - cp.x) < 48) {
+                  r.respawnX = cp.x - r.w * 0.5;
+                  r.respawnY = cp.y;
+                }
+              }
+
+              const prevAcc = racerTrailSpawnAcc.get(r.id) || 0;
+              let nextAcc = prevAcc + dt * 28;
+              const backX = (r.x + r.w * 0.5) - r.facing * 13;
+              const backY = r.y + r.h * 0.44;
+              while (nextAcc >= 1) {
+                nextAcc -= 1;
+                spawnBackTrailParticle(backX, backY, -r.facing, r.skinId, false);
+              }
+              racerTrailSpawnAcc.set(r.id, nextAcc);
+
+              let supportPlat = currentCourse.platforms[0];
+              for (const p of currentCourse.platforms) {
+                if (r.x + 15 >= p.x - 45 && r.x <= p.x + p.w + 45) {
+                  supportPlat = p;
+                }
+              }
+              const jumpOffset = Math.abs(Math.sin(timeSec * 5 + r.jumpPhase)) * 52;
+              const desiredY = supportPlat.y - r.h - jumpOffset;
+              const nowGrounded = jumpOffset < 4;
+              if (r.prevGrounded && !nowGrounded) {
+                spawnJumpBurst(r.x + r.w * 0.5, supportPlat.y, r.skinId, false);
+              }
+              r.prevGrounded = nowGrounded;
+              r.grounded = nowGrounded;
+              r.y += (desiredY - r.y) * Math.min(1, dt * 8);
+              r.progress = getProgress(r.x);
+
+              if (r.x >= currentCourse.goal.x) {
+                r.finished = true;
+                r.finishTime = elapsedTime;
+              }
             }
           }
         } else {
@@ -3313,6 +3724,7 @@
                 facing: player.facing,
                 grounded: player.grounded,
                 dashing: false,
+                shieldActive: player.shieldActive,
                 progress: 100,
                 finished: true,
                 finishTime: elapsedTime
@@ -3360,6 +3772,8 @@
 
       const isDashing = !!options.dashing;
       const isGrounded = options.grounded !== false;
+      const hasShield = !!options.shieldActive;
+      const isFlashing = (options.deadFlashTimer || 0) > 0;
       const walkPhase = options.walkPhase || 0;
 
       let leftAngle = 0;
@@ -3398,7 +3812,8 @@
       ctx.translate(cx, bodyCenterY);
       ctx.rotate(tilt);
       ctx.scale(dir, 1);
-      if (isGhost) ctx.globalAlpha = 0.58;
+      if (isGhost) ctx.globalAlpha = 0.65;
+      if (isFlashing && Math.sin(animClock * 38) > 0) ctx.globalAlpha = 0.35;
 
       const hipY = 12.5;
 
@@ -3456,14 +3871,25 @@
 
       drawLeg(3.2, hipY, rightAngle, rightLift, legLen, footLen, skin.body, skin.band, false);
 
+      if (hasShield) {
+        ctx.strokeStyle = "#38bdf8";
+        ctx.fillStyle = "rgba(56, 189, 248, 0.16)";
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.arc(2, 0, 24, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
       ctx.restore();
 
       ctx.save();
       if (isGhost) ctx.globalAlpha = 0.85;
       ctx.font = "bold 11px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillStyle = isGhost ? "#e2e8f0" : "#38bdf8";
-      ctx.fillText(label, cx, y - 8);
+      ctx.fillStyle = isFlashing ? "#fca5a5" : (isGhost ? "#e2e8f0" : "#38bdf8");
+      const displayTag = isFlashing ? `💥 ${label}` : label;
+      ctx.fillText(displayTag, cx, y - 8);
       ctx.restore();
     }
 
@@ -3515,6 +3941,26 @@
         ctx.strokeRect(p.x, p.y, p.w, p.h);
       }
 
+      if (activeRaceMode === "ITEM" && currentCourse.itemBoxes) {
+        for (const box of currentCourse.itemBoxes) {
+          if (!box.active) continue;
+          const info = ITEM_TYPES[box.itemType] || ITEM_TYPES.BOOSTER;
+          ctx.save();
+          ctx.fillStyle = "rgba(168, 85, 247, 0.88)";
+          ctx.strokeStyle = "#fde047";
+          ctx.lineWidth = 2.4;
+          drawRoundRect(ctx, box.x, box.y, box.w, box.h, 7);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.font = "14px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(info.icon, box.x + box.w * 0.5, box.y + box.h * 0.5 + 1);
+          ctx.restore();
+        }
+      }
+
       for (const s of currentCourse.springs) {
         ctx.fillStyle = "#facc15";
         ctx.fillRect(s.x, s.y, s.w, s.h);
@@ -3559,22 +4005,26 @@
         drawCharacter(r.x, r.y, r.w, r.h, r.facing, r.skinId, r.name, true, {
           walkPhase: r.walkPhase || (animClock * 12),
           grounded: r.grounded !== false,
-          dashing: !!r.dashing
+          dashing: !!r.dashing,
+          shieldActive: !!r.shieldActive,
+          deadFlashTimer: r.deadFlashTimer || 0
         });
       }
 
-      if (player.dashActiveTimer > 0) {
+      if (player.dashActiveTimer > 0 || player.rocketTimer > 0) {
         ctx.save();
-        ctx.fillStyle = "rgba(56, 189, 248, 0.35)";
+        ctx.fillStyle = player.rocketTimer > 0 ? "rgba(250, 204, 21, 0.35)" : "rgba(56, 189, 248, 0.35)";
         drawRoundRect(ctx, player.x - player.facing * 24, player.y + 4, player.w, player.h - 8, 6);
         ctx.fill();
         ctx.restore();
       }
 
-      drawCharacter(player.x, player.y, player.w, player.h, player.facing, selectedSkinId, "⭐ " + myNickname, false, {
+      const itemPrefix = player.heldItem && ITEM_TYPES[player.heldItem] ? `${ITEM_TYPES[player.heldItem].icon} ` : "";
+      drawCharacter(player.x, player.y, player.w, player.h, player.facing, selectedSkinId, `${itemPrefix}⭐ ${myNickname}`, false, {
         walkPhase: player.walkPhase,
         grounded: player.grounded,
-        dashing: player.dashActiveTimer > 0
+        dashing: player.dashActiveTimer > 0 || player.rocketTimer > 0,
+        shieldActive: player.shieldActive
       });
 
       ctx.restore();
@@ -3603,7 +4053,9 @@
 
       try { SoundEngine.updateToggleButtonsUI(); } catch (e) {}
       try { updateGoldDisplays(); } catch (e) {}
+      try { renderModeSelectorUI(); } catch (e) {}
       try { updateWideViewToggleUI(); } catch (e) {}
+      try { updateItemButtonUI(); } catch (e) {}
       try { resizeCanvas(); } catch (e) {}
       try { renderSkinGrid(); } catch (e) {}
       try { renderFriendsList(); } catch (e) {}
@@ -3644,6 +4096,10 @@
           });
         }
       };
+
+      bindClick("mode-card-SPEED", () => selectRaceMode("SPEED"));
+      bindClick("mode-card-ITEM", () => selectRaceMode("ITEM"));
+      bindClick("mode-card-TIME_1M", () => selectRaceMode("TIME_1M"));
 
       bindClick("btn-sound-hud", () => SoundEngine.toggleMute());
       bindClick("btn-sound-lobby", () => SoundEngine.toggleMute());
@@ -3707,6 +4163,7 @@
 
       bindTouchOrMouseAction(document.getElementById("btn-left"), "left");
       bindTouchOrMouseAction(document.getElementById("btn-right"), "right");
+      bindTouchOrMouseAction(document.getElementById("btn-item"), "item", () => activateHeldItem());
       bindTouchOrMouseAction(document.getElementById("btn-jump"), "jump", () => tryJump());
       bindTouchOrMouseAction(document.getElementById("btn-dash"), "dash", () => tryDash());
 
@@ -3722,6 +4179,10 @@
           if (!input.dash) tryDash();
           input.dash = true;
         }
+        if (e.code === "KeyF" || e.code === "Enter") {
+          if (!input.item) activateHeldItem();
+          input.item = true;
+        }
       });
 
       window.addEventListener("keyup", (e) => {
@@ -3729,6 +4190,7 @@
         if (e.code === "ArrowRight" || e.code === "KeyD") input.right = false;
         if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") input.jump = false;
         if (e.code === "ShiftLeft" || e.code === "ShiftRight" || e.code === "KeyE") input.dash = false;
+        if (e.code === "KeyF" || e.code === "Enter") input.item = false;
       });
 
       window.addEventListener("blur", resetInputs);
