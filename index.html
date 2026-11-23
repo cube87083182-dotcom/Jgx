@@ -44,7 +44,6 @@
     .hidden,
     #lobby-screen.hidden,
     #matchmaking-overlay.hidden,
-    #room-lobby-overlay.hidden,
     #lineup-overlay.hidden,
     #countdown-overlay.hidden,
     #result-screen.hidden,
@@ -55,7 +54,9 @@
     #hud.hidden,
     #touch-controls.hidden,
     #btn-training-joy-edit.hidden,
-    #active-room-lobby-banner.hidden,
+    #lobby-bottom-room-panel.hidden,
+    #btn-start-room-race.hidden,
+    #guest-room-waiting-pill.hidden,
     #btn-rematch.hidden {
       display: none !important;
       pointer-events: none !important;
@@ -223,11 +224,11 @@
       pointer-events: auto;
     }
 
-    /* 친구 초대 실시간 모달 팝업 (00님이 초대했어요 · 수락 / 거절) */
+    /* 친구 초대 실시간 모달 팝업 (00님이 초대했어요 · 수락 / 거절 / 10분간 무시하기) */
     #friend-invite-modal {
       position: fixed;
       inset: 0;
-      z-index: 180;
+      z-index: 185;
       background: rgba(2, 6, 23, 0.86);
       backdrop-filter: blur(6px);
       display: flex;
@@ -243,7 +244,7 @@
       background: linear-gradient(180deg, #1e293b, #0f172a);
       border: 2.5px solid #38bdf8;
       border-radius: 18px;
-      padding: 20px 18px;
+      padding: 20px 18px 16px;
       text-align: center;
       box-shadow: 0 24px 64px rgba(0, 0, 0, 0.9);
       animation: popScaleIn 0.18s ease-out;
@@ -252,6 +253,27 @@
     @keyframes popScaleIn {
       from { transform: scale(0.9); opacity: 0.3; }
       to { transform: scale(1); opacity: 1; }
+    }
+
+    .btn-ignore-10m {
+      margin-top: 9px;
+      background: rgba(51, 65, 85, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      color: #94a3b8;
+      border-radius: 8px;
+      padding: 4px 11px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-ignore-10m:hover {
+      color: #e2e8f0;
+      border-color: #94a3b8;
+    }
+
+    .btn-ignore-10m:active {
+      transform: scale(0.95);
     }
 
     /* 전체 화면 오버레이 */
@@ -272,7 +294,7 @@
       position: relative;
       z-index: 62;
       width: 100%;
-      max-width: 840px;
+      max-width: 860px;
       max-height: 95vh;
       overflow-y: auto;
       background: #1e293b;
@@ -298,20 +320,6 @@
       font-size: 11px;
       color: #94a3b8;
       margin-bottom: 10px;
-    }
-
-    /* 로비 활성 방 유지 배너 (방에서 '로비로' 돌아온 경우 표시 · '🚪 방 나가기'로만 퇴장) */
-    #active-room-lobby-banner {
-      background: linear-gradient(135deg, rgba(234, 88, 12, 0.25), rgba(37, 99, 235, 0.25));
-      border: 2px solid #f59e0b;
-      border-radius: 12px;
-      padding: 8px 12px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      flex-wrap: wrap;
     }
 
     /* 로비 상단 프로필 & 골드 바 */
@@ -658,17 +666,16 @@
       -webkit-user-select: text;
       user-select: text;
       pointer-events: auto;
-      width: 96px;
+      width: 92px;
       padding: 7px 8px;
       border-radius: 8px;
       border: 2px solid #475569;
       background: #1e293b;
       color: #facc15;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 900;
       text-align: center;
       letter-spacing: 2px;
-      text-transform: uppercase;
       outline: none;
     }
 
@@ -697,12 +704,13 @@
       color: #fca5a5;
     }
 
-    /* 로비 & 방 대기실 친구 목록 바 */
+    /* 로비 친구 목록 바 & 온라인 초록 점 상태 표시 */
     .friends-panel {
       background: #0f172a;
       border: 1px solid #334155;
       border-radius: 12px;
       padding: 8px 11px;
+      margin-bottom: 8px;
     }
 
     .friends-panel-header {
@@ -721,7 +729,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      max-height: 82px;
+      max-height: 92px;
       overflow-y: auto;
     }
 
@@ -744,6 +752,25 @@
       object-fit: contain;
       border-radius: 5px;
       background: #0f172a;
+    }
+
+    .status-dot-online {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+      flex-shrink: 0;
+    }
+
+    .status-dot-offline {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #64748b;
+      flex-shrink: 0;
     }
 
     .btn-invite-friend {
@@ -772,6 +799,56 @@
       cursor: pointer;
     }
 
+    /* 로비 맨 밑 내장 5x2 방 대기실 패널 (방 만들기 시 화면 전환 없이 로비 하단에 표시) */
+    #lobby-bottom-room-panel {
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(30, 27, 75, 0.92));
+      border: 2px solid #f59e0b;
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin-top: 8px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+    }
+
+    .embedded-room-code-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: rgba(2, 6, 23, 0.85);
+      border: 1.5px solid rgba(250, 204, 21, 0.55);
+      border-radius: 10px;
+      padding: 7px 11px;
+      margin-bottom: 8px;
+    }
+
+    .room-code-big-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245, 158, 11, 0.2);
+      border: 1.5px solid #facc15;
+      color: #fde047;
+      padding: 3px 11px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 3px;
+    }
+
+    .guest-waiting-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(56, 189, 248, 0.16);
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      color: #7dd3fc;
+      padding: 6px 11px;
+      border-radius: 9px;
+      font-size: 11.5px;
+      font-weight: 800;
+    }
+
     #room-status-line {
       margin-top: 7px;
       text-align: center;
@@ -781,9 +858,8 @@
       min-height: 16px;
     }
 
-    /* 10인 랜덤 매치 & 방 만들기 5x2 대기실 오버레이 */
-    #matchmaking-overlay,
-    #room-lobby-overlay {
+    /* 10인 랜덤 매치 대기실 오버레이 */
+    #matchmaking-overlay {
       position: fixed;
       inset: 0;
       z-index: 75;
@@ -880,22 +956,22 @@
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
       grid-template-rows: repeat(2, minmax(0, 1fr));
-      gap: 8px;
+      gap: 7px;
       width: 100%;
     }
 
     .lineup-card {
       background: #0f172a;
       border: 2px solid #334155;
-      border-radius: 13px;
-      padding: 7px 6px 8px;
+      border-radius: 12px;
+      padding: 6px 5px 7px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      gap: 3px;
       overflow: hidden;
-      min-height: 116px;
+      min-height: 104px;
     }
 
     .lineup-card.me {
@@ -919,7 +995,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 900;
       padding: 0 2px;
     }
@@ -927,7 +1003,7 @@
     .lineup-role-badge {
       padding: 1px 6px;
       border-radius: 999px;
-      font-size: 9px;
+      font-size: 8.5px;
       font-weight: 900;
     }
 
@@ -947,9 +1023,9 @@
     }
 
     .lineup-skin-img-wrap {
-      width: 52px;
-      height: 52px;
-      border-radius: 12px;
+      width: 46px;
+      height: 46px;
+      border-radius: 11px;
       background: radial-gradient(circle at 50% 42%, rgba(56, 189, 248, 0.2), rgba(2, 6, 23, 0.88));
       border: 1.5px solid rgba(255, 255, 255, 0.18);
       display: flex;
@@ -959,13 +1035,13 @@
     }
 
     .lineup-skin-img {
-      width: 48px;
-      height: 48px;
+      width: 42px;
+      height: 42px;
       object-fit: contain;
     }
 
     .lineup-nick {
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 900;
       color: #f8fafc;
       max-width: 100%;
@@ -975,7 +1051,7 @@
     }
 
     .lineup-skin-name {
-      font-size: 9.5px;
+      font-size: 9px;
       font-weight: 700;
       color: #94a3b8;
     }
@@ -1364,7 +1440,7 @@
       .lineup-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         grid-template-rows: auto;
-        max-height: 56vh;
+        max-height: 52vh;
         overflow-y: auto;
       }
     }
@@ -1379,19 +1455,22 @@
     </div>
   </div>
 
-  <!-- 친구 초대 실시간 팝업 모달 (00님이 초대했어요 · 수락 / 거절) -->
+  <!-- 친구 초대 실시간 팝업 모달 (00님이 초대했어요 · 수락 / 거절 / 10분간 무시하기) -->
   <div id="friend-invite-modal" class="hidden" role="dialog" aria-modal="true" aria-label="친구 방 초대 알림">
     <div class="invite-popup-card">
-      <div style="font-size:38px;margin-bottom:6px;">📨</div>
+      <div style="font-size:36px;margin-bottom:5px;">📨</div>
       <div id="friend-invite-modal-title" style="font-size:19px;font-weight:900;color:#fde047;margin-bottom:6px;">
         친구님이 초대했어요
       </div>
-      <div id="friend-invite-modal-desc" style="font-size:13px;font-weight:700;color:#cbd5e1;line-height:1.45;margin-bottom:16px;">
-        사람 전용 방으로 초대했습니다. 수락하면 방으로 바로 이동합니다!
+      <div id="friend-invite-modal-desc" style="font-size:13px;font-weight:700;color:#cbd5e1;line-height:1.45;margin-bottom:15px;">
+        사람 전용 방으로 초대했습니다. 수락하면 방 대기실로 바로 입장합니다!
       </div>
       <div style="display:flex;gap:10px;justify-content:center;">
         <button type="button" id="btn-accept-invite-popup" class="tool-btn btn-bot" style="padding:10px 24px;font-size:14px;" data-action="accept-friend-invite">✅ 수락</button>
         <button type="button" id="btn-decline-invite-popup" class="tool-btn btn-leave-room" style="padding:10px 22px;font-size:14px;" data-action="decline-friend-invite">❌ 거절</button>
+      </div>
+      <div>
+        <button type="button" id="btn-ignore-10m-invite" class="btn-ignore-10m" data-action="ignore-friend-invite-10m">🔕 10분간 무시하기</button>
       </div>
     </div>
   </div>
@@ -1438,36 +1517,6 @@
         <div class="lineup-grid" id="mm-grid"></div>
         <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">
           💡 AI 봇은 절대 참가하지 않습니다. 다른 기기·창·탭에서 '🌐 10인 랜덤 매치'를 누른 플레이어들이 실시간으로 합류합니다.
-        </div>
-      </div>
-    </div>
-
-    <!-- 방 만들기 / 방 참가 5x2 대기실 오버레이 (100% 사람 전용 방 · AI 입장 불가) -->
-    <div id="room-lobby-overlay" class="hidden" role="dialog" aria-label="방 대기실 5x2 대열">
-      <div class="lineup-container">
-        <div class="lineup-header">
-          <div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px;">
-              <div class="lineup-title" id="room-lobby-title">🏠 방 대기실 [00000] · 5×2 대열</div>
-              <span style="background:rgba(239,68,68,0.22);border:1.5px solid #f87171;color:#fecaca;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:900;">👥 사람 전용 방 · AI 입장 불가</span>
-              <span class="net-status-pill connecting" id="room-net-badge">⏳ P2P 방 연결중...</span>
-            </div>
-            <div class="lineup-sub" id="room-lobby-subtitle">현재 입장 인원: 1 / 10명 · 친구에게 5자리 방 코드를 알려주세요!</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            <button type="button" class="tool-btn btn-invite-room" data-action="invite-room">📋 방 코드 복사</button>
-            <button type="button" class="tool-btn btn-bot" id="btn-start-room-race" data-action="start-room-race">▶ 레이스 시작</button>
-            <button type="button" class="hud-btn" data-action="back-to-lobby-keep-room" style="background:#334155;border-color:#94a3b8;">🏠 로비로 (방 유지)</button>
-            <button type="button" class="hud-btn exit-btn" data-action="leave-room-explicit">🚪 방 나가기</button>
-          </div>
-        </div>
-        <div class="lineup-grid" id="room-lobby-grid"></div>
-        <div class="friends-panel">
-          <div class="friends-panel-header">
-            <span id="room-friends-count">👥 내 친구 목록 (방으로 즉시 초대 가능)</span>
-            <span style="font-size:10.5px;color:#94a3b8;">친구 초대 버튼을 누르면 친구 화면에 '00님이 초대했어요' 팝업이 뜹니다!</span>
-          </div>
-          <div class="friends-list-row" id="room-friends-list"></div>
         </div>
       </div>
     </div>
@@ -1554,18 +1603,6 @@
         <div class="title">PARKOUR RUSH 10P</div>
         <div class="subtitle">스피드전 · 아이템전 · 1분전 · 10인 사람 랜덤매치 · AI 대전 · 10초 팔뻗어오르기 · 훈련장</div>
 
-        <!-- 현재 참가 중인 방 유지 배너 (오직 '🚪 방 나가기'를 눌러야만 방 퇴장) -->
-        <div id="active-room-lobby-banner" class="hidden">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span style="font-size:13px;font-weight:900;color:#fde047;" id="active-room-banner-text">🏠 방 [00000]에 참가 중 (1명)</span>
-            <span style="font-size:11px;color:#cbd5e1;">로비에서도 방이 유지됩니다</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <button type="button" class="tool-btn btn-join-room" data-action="reopen-active-room">📋 대기실 열기</button>
-            <button type="button" class="tool-btn btn-leave-room" data-action="leave-room-explicit">🚪 방 나가기</button>
-          </div>
-        </div>
-
         <!-- 프로필 & 골드 상단 바 -->
         <div class="profile-bar">
           <div class="profile-left">
@@ -1618,27 +1655,49 @@
           <button type="button" class="main-btn btn-bot" id="btn-bot-match" data-action="start-bot">🤖 AI 대전</button>
         </div>
 
-        <!-- 방 만들기 / 방 참가 바 (5자리 팀 코드 · 다른 기기/친구 폰 연결 지원) -->
+        <!-- 방 만들기 / 방 참가 바 (4자리 숫자 방 코드 · 로비 맨 아래 5x2 대기실 연동) -->
         <div class="room-tools-bar">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <button type="button" class="tool-btn btn-create-room" id="btn-create-room" data-action="create-room">🏠 방 만들기</button>
-            <input type="text" id="room-code-input" maxlength="6" placeholder="코드5자" autocomplete="off" />
+            <input type="text" id="room-code-input" maxlength="4" inputmode="numeric" placeholder="코드4자" autocomplete="off" />
             <button type="button" class="tool-btn btn-join-room" id="btn-join-room" data-action="join-room">🔑 방 참가</button>
             <button type="button" class="tool-btn btn-invite-room" id="btn-lobby-invite" data-action="invite-room">초대</button>
           </div>
-          <span style="font-size:11px;color:#94a3b8;font-weight:700;">🌐 다른 기기/친구 폰과 팀 코드 연결 지원 · AI는 'AI 대전'에서만 등장</span>
+          <span style="font-size:11px;color:#94a3b8;font-weight:700;">🌐 4자리 숫자 방 코드 · 방 만들기를 누르면 로비 맨 아래에 5×2 대기실이 열립니다</span>
         </div>
 
-        <!-- 로비 친구 목록 & 방으로 초대 -->
+        <!-- 로비 친구 목록 (일방 친구 추가 지원 · 실시간 온라인 초록 점 표시) -->
         <div class="friends-panel">
           <div class="friends-panel-header">
             <span id="lobby-friends-count">👥 친구 목록 (0명)</span>
-            <span style="font-size:10.5px;color:#94a3b8;">초대 버튼을 누르면 친구 화면에 '00님이 초대했어요' 팝업이 뜹니다!</span>
+            <span style="font-size:10.5px;color:#94a3b8;">🟢 온라인 / ⚫ 오프라인 · 상대가 날 추가 안 해도 초대 가능!</span>
           </div>
           <div class="friends-list-row" id="lobby-friends-list"></div>
         </div>
 
         <div id="room-status-line">원하는 모드와 스킨을 고른 뒤 랜덤 매치(사람 10인), 훈련장, AI 대전 또는 방 만들기를 눌러보세요!</div>
+
+        <!-- 로비 맨 밑 고정 5x2 방 대기실 (방 만들기 / 방 참가 시 다른 화면으로 넘어가지 않고 이곳에 표시) -->
+        <div id="lobby-bottom-room-panel" class="hidden" aria-label="로비 하단 5x2 방 대기실">
+          <div class="embedded-room-code-banner">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:13px;font-weight:900;color:#f8fafc;">🏠 방 코드:</span>
+              <span class="room-code-big-pill" id="embedded-room-code-display">0000</span>
+              <span style="background:rgba(239,68,68,0.22);border:1px solid #f87171;color:#fecaca;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:900;">👥 사람 전용 방 · AI 불가</span>
+              <span class="net-status-pill connecting" id="room-net-badge">⏳ 연결중...</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <button type="button" class="tool-btn btn-invite-room" data-action="invite-room">📋 코드 복사</button>
+              <button type="button" class="tool-btn btn-bot" id="btn-start-room-race" data-action="start-room-race">▶ 지금 인원으로 시작하기</button>
+              <span class="guest-waiting-pill hidden" id="guest-room-waiting-pill">⏳ 방장이 시작하기를 기다리는 중...</span>
+              <button type="button" class="tool-btn btn-leave-room" data-action="leave-room-explicit">🚪 방 나가기</button>
+            </div>
+          </div>
+          <div style="font-size:11px;font-weight:800;color:#cbd5e1;margin-bottom:6px;" id="room-lobby-subtitle">
+            현재 입장 인원: 1 / 10명 · 친구에게 4자리 숫자 방 코드를 알려주거나 친구 목록에서 초대하세요!
+          </div>
+          <div class="lineup-grid" id="room-lobby-grid"></div>
+        </div>
       </div>
     </div>
 
@@ -1831,32 +1890,48 @@
       })();
 
       // ==========================================
-      // 3. 핵심 상태 변수 및 단일 오버레이 전환 setScreen(screenName)
+      // 3. 핵심 영구 고유 플레이어 ID, 상태 변수 및 단일 오버레이 전환 setScreen
       // ==========================================
-      let currentScreen = "LOBBY"; // LOBBY | MATCHMAKING | ROOM_LOBBY | LINEUP | COUNTDOWN | RACING | TRAINING | JOYSTICK_EDITOR | RESULT
+      const MY_PERSISTENT_UID = (() => {
+        const saved = safeGetStorage("parkour_persistent_uid_v1", "");
+        if (saved && saved.length >= 6) return saved;
+        const fresh = "U" + Math.random().toString(36).slice(2, 10).toUpperCase();
+        safeSetStorage("parkour_persistent_uid_v1", fresh);
+        return fresh;
+      })();
+
+      let currentScreen = "LOBBY"; // LOBBY | MATCHMAKING | LINEUP | COUNTDOWN | RACING | TRAINING | JOYSTICK_EDITOR | RESULT
       let activeRoomCode = "";
       let isRoomHost = false;
       let lastLaunchKind = "BOT"; // RANDOM | BOT | TRAINING | ROOM
       let roomParticipants = [];
       let matchmakingQueue = [];
       let matchmakingTimer = null;
-      let incomingInviteData = null; // { roomCode, fromName, fromPeerId }
-      const MY_CLIENT_ID = "HUMAN_" + Math.random().toString(36).slice(2, 10).toUpperCase();
+      let incomingInviteData = null; // { roomCode, fromName, fromUid, fromPeerId }
 
-      function updateActiveRoomBannerUI() {
-        const bannerEl = document.getElementById("active-room-lobby-banner");
-        const textEl = document.getElementById("active-room-banner-text");
-        if (!bannerEl) return;
+      // 로비 맨 밑 내장 5x2 대기실 상태 갱신 (방장이 아니면 '지금 인원으로 시작하기' 버튼 숨김)
+      function updateLobbyEmbeddedRoomUI() {
+        const panelEl = document.getElementById("lobby-bottom-room-panel");
+        const codeEl = document.getElementById("embedded-room-code-display");
+        const startBtnEl = document.getElementById("btn-start-room-race");
+        const guestWaitEl = document.getElementById("guest-room-waiting-pill");
 
-        if (activeRoomCode) {
-          const memberCount = Math.max(1, roomParticipants.length);
-          const roleTag = isRoomHost ? "방장" : "참가자";
-          if (textEl) {
-            textEl.textContent = `🏠 방 [${activeRoomCode}] 유지 중 (${roleTag} · ${memberCount}명)`;
-          }
-          bannerEl.classList.remove("hidden");
-        } else {
-          bannerEl.classList.add("hidden");
+        if (!panelEl) return;
+
+        if (!activeRoomCode) {
+          panelEl.classList.add("hidden");
+          return;
+        }
+
+        panelEl.classList.remove("hidden");
+        if (codeEl) codeEl.textContent = activeRoomCode;
+
+        // 방장에게만 '지금 인원으로 시작하기' 버튼을 표시하고, 방장이 아닌 사람은 시작하기 버튼 제거
+        if (startBtnEl) {
+          startBtnEl.classList.toggle("hidden", !isRoomHost);
+        }
+        if (guestWaitEl) {
+          guestWaitEl.classList.toggle("hidden", isRoomHost);
         }
       }
 
@@ -1866,7 +1941,6 @@
         const screenOverlayMap = {
           LOBBY: "lobby-screen",
           MATCHMAKING: "matchmaking-overlay",
-          ROOM_LOBBY: "room-lobby-overlay",
           LINEUP: "lineup-overlay",
           COUNTDOWN: "countdown-overlay",
           JOYSTICK_EDITOR: "joystick-editor-overlay",
@@ -1881,7 +1955,7 @@
         });
 
         if (screenName === "LOBBY") {
-          updateActiveRoomBannerUI();
+          updateLobbyEmbeddedRoomUI();
         }
 
         const skinModal = document.getElementById("skin-modal");
@@ -1937,6 +2011,12 @@
         selectedGameMode = modeId;
         safeSetStorage("parkour_game_mode", modeId);
         renderModeUI();
+        if (activeRoomCode) {
+          renderRoomLobbyGrid();
+          if (isRoomHost) {
+            broadcastRoomEvent({ type: "ROOM_SYNC", members: roomParticipants, gameMode: selectedGameMode });
+          }
+        }
       }
 
       function renderModeUI() {
@@ -2187,6 +2267,13 @@
               pendingBuySkinId = null;
               saveEconomy();
               renderLobbySkinGrid();
+              if (activeRoomCode) {
+                roomParticipants = roomParticipants.map(m =>
+                  m.id === MY_PERSISTENT_UID ? { ...m, skinId: selectedSkinId } : m
+                );
+                renderRoomLobbyGrid();
+                broadcastRoomEvent({ type: "ROOM_SYNC", members: roomParticipants, gameMode: selectedGameMode });
+              }
             } else {
               openSkinBuyModal(skin.id);
             }
@@ -2249,9 +2336,16 @@
       }
 
       // ==========================================
-      // 5. 친구 목록 & 실시간 초대 팝업 (00님이 초대했어요 · 수락 / 거절)
+      // 5. 친구 목록 (일방 추가 가능 · 실시간 온라인 초록 점 · 10분간 초대 무시하기)
       // ==========================================
-      const FRIENDS_STORAGE_KEY = "parkour_friends_list_v1";
+      const FRIENDS_STORAGE_KEY = "parkour_friends_list_v2";
+      const IGNORED_INVITES_STORAGE_KEY = "parkour_ignored_invites_v1";
+      const ONLINE_TTL_MS = 18000;
+      const IGNORE_DURATION_MS = 10 * 60 * 1000; // 10분
+
+      // 온라인 친구 실시간 맵: key = uid 또는 name
+      const onlinePresenceMap = new Map();
+
       let friendList = (() => {
         try {
           const parsed = JSON.parse(safeGetStorage(FRIENDS_STORAGE_KEY, "[]"));
@@ -2259,37 +2353,88 @@
             return parsed
               .filter(f => f && typeof f.name === "string" && f.name.trim())
               .map(f => ({
+                uid: typeof f.uid === "string" ? f.uid : "",
                 name: f.name.trim().slice(0, 10),
-                skinId: SKINS[f.skinId] ? Number(f.skinId) : 0,
-                peerId: typeof f.peerId === "string" ? f.peerId : ""
+                skinId: SKINS[f.skinId] ? Number(f.skinId) : 0
               }));
           }
         } catch (e) {}
         return [];
       })();
 
+      // 10분간 초대 차단 맵: { [key]: expireTimestampMs }
+      let ignoredInvitesMap = (() => {
+        try {
+          const parsed = JSON.parse(safeGetStorage(IGNORED_INVITES_STORAGE_KEY, "{}"));
+          if (parsed && typeof parsed === "object") {
+            const now = Date.now();
+            const clean = {};
+            Object.entries(parsed).forEach(([k, exp]) => {
+              if (Number(exp) > now) clean[k] = Number(exp);
+            });
+            return clean;
+          }
+        } catch (e) {}
+        return {};
+      })();
+
+      function saveIgnoredInvites() {
+        safeSetStorage(IGNORED_INVITES_STORAGE_KEY, JSON.stringify(ignoredInvitesMap));
+      }
+
+      function isSenderIgnoredFor10Min(fromUid, fromName) {
+        const now = Date.now();
+        let changed = false;
+        Object.keys(ignoredInvitesMap).forEach(k => {
+          if (ignoredInvitesMap[k] <= now) {
+            delete ignoredInvitesMap[k];
+            changed = true;
+          }
+        });
+        if (changed) saveIgnoredInvites();
+
+        const uidKey = fromUid ? "uid:" + fromUid : "";
+        const nameKey = fromName ? "name:" + String(fromName).trim() : "";
+        return (uidKey && ignoredInvitesMap[uidKey] > now) || (nameKey && ignoredInvitesMap[nameKey] > now);
+      }
+
+      function ignoreSenderFor10Min(fromUid, fromName) {
+        const expireAt = Date.now() + IGNORE_DURATION_MS;
+        if (fromUid) ignoredInvitesMap["uid:" + fromUid] = expireAt;
+        if (fromName) ignoredInvitesMap["name:" + String(fromName).trim()] = expireAt;
+        saveIgnoredInvites();
+      }
+
       function saveFriends() {
         safeSetStorage(FRIENDS_STORAGE_KEY, JSON.stringify(friendList));
       }
 
-      function isFriendName(name) {
-        const clean = String(name || "").trim();
-        return friendList.some(f => f.name === clean);
+      function isFriendEntry(uid, name) {
+        const cleanUid = String(uid || "").trim();
+        const cleanName = String(name || "").trim();
+        return friendList.some(f => (cleanUid && f.uid && f.uid === cleanUid) || f.name === cleanName);
       }
 
-      function addFriend(name, skinId = 0, peerId = "") {
-        const clean = String(name || "").trim().slice(0, 10);
-        if (!clean || clean === myNickname) return false;
-        const existing = friendList.find(f => f.name === clean);
+      // 내가 친구 추가하면 상대가 나를 추가하지 않았어도 내 친구 목록에 등록되어 바로 초대 가능
+      function addFriend(name, skinId = 0, uid = "") {
+        const cleanName = String(name || "").trim().slice(0, 10);
+        const cleanUid = String(uid || "").trim();
+        if (!cleanName || (cleanUid && cleanUid === MY_PERSISTENT_UID)) return false;
+
+        const existing = friendList.find(f => (cleanUid && f.uid && f.uid === cleanUid) || f.name === cleanName);
         if (existing) {
-          if (peerId) existing.peerId = peerId;
+          if (cleanUid && !existing.uid) existing.uid = cleanUid;
+          existing.name = cleanName;
+          existing.skinId = SKINS[skinId] ? Number(skinId) : existing.skinId;
           saveFriends();
+          renderFriendsLists();
           return false;
         }
+
         friendList.push({
-          name: clean,
-          skinId: SKINS[skinId] ? Number(skinId) : 0,
-          peerId: String(peerId || "")
+          uid: cleanUid,
+          name: cleanName,
+          skinId: SKINS[skinId] ? Number(skinId) : 0
         });
         saveFriends();
         SoundEngine.playItemPickup();
@@ -2297,22 +2442,73 @@
         return true;
       }
 
-      function removeFriend(name) {
-        const clean = String(name || "").trim();
-        friendList = friendList.filter(f => f.name !== clean);
+      function removeFriend(uid, name) {
+        const cleanUid = String(uid || "").trim();
+        const cleanName = String(name || "").trim();
+        friendList = friendList.filter(f => {
+          if (cleanUid && f.uid) return f.uid !== cleanUid;
+          return f.name !== cleanName;
+        });
         saveFriends();
         renderFriendsLists();
       }
 
-      function showFriendInviteModal(fromName, roomCode, fromPeerId = "") {
+      function markPlayerOnline(uid, name, skinId = 0) {
+        const now = Date.now();
+        const cleanUid = String(uid || "").trim();
+        const cleanName = String(name || "").trim();
+        if (cleanUid && cleanUid !== MY_PERSISTENT_UID) {
+          onlinePresenceMap.set("uid:" + cleanUid, { ts: now, name: cleanName, skinId });
+        }
+        if (cleanName && cleanName !== myNickname) {
+          onlinePresenceMap.set("name:" + cleanName, { ts: now, uid: cleanUid, skinId });
+        }
+        // 친구 목록에 있는 사람이라면 최신 닉네임·스킨·UID 동기화
+        let updated = false;
+        friendList.forEach(f => {
+          if ((cleanUid && f.uid && f.uid === cleanUid) || (cleanName && f.name === cleanName)) {
+            if (cleanUid && !f.uid) { f.uid = cleanUid; updated = true; }
+            if (cleanName && f.name !== cleanName) { f.name = cleanName; updated = true; }
+          }
+        });
+        if (updated) saveFriends();
+      }
+
+      function isFriendOnline(friend) {
+        if (!friend) return false;
+        const now = Date.now();
+        if (friend.uid) {
+          const rec = onlinePresenceMap.get("uid:" + friend.uid);
+          if (rec && now - rec.ts <= ONLINE_TTL_MS) return true;
+        }
+        if (friend.name) {
+          const rec = onlinePresenceMap.get("name:" + friend.name);
+          if (rec && now - rec.ts <= ONLINE_TTL_MS) return true;
+        }
+        return false;
+      }
+
+      function showFriendInviteModal(fromName, roomCode, fromUid = "") {
         const cleanFrom = String(fromName || "친구").trim().slice(0, 10);
         const cleanCode = normalizeRoomCode(roomCode);
         if (!cleanCode) return;
 
+        // 10분간 무시하기 상태인지 확인 후 자동 거절
+        if (isSenderIgnoredFor10Min(fromUid, cleanFrom)) {
+          sendMultiMsg({
+            type: "FRIEND_INVITE_DECLINED",
+            roomCode: cleanCode,
+            fromName: myNickname,
+            targetUid: fromUid,
+            targetName: cleanFrom
+          });
+          return;
+        }
+
         incomingInviteData = {
           roomCode: cleanCode,
           fromName: cleanFrom,
-          fromPeerId: String(fromPeerId || "")
+          fromUid: String(fromUid || "")
         };
 
         const modalEl = document.getElementById("friend-invite-modal");
@@ -2354,10 +2550,30 @@
             type: "FRIEND_INVITE_DECLINED",
             roomCode: incomingInviteData.roomCode,
             fromName: myNickname,
+            targetUid: incomingInviteData.fromUid,
             targetName: incomingInviteData.fromName
           });
         }
         hideFriendInviteModal();
+      }
+
+      function ignoreIncomingFriendInviteFor10Min() {
+        if (incomingInviteData) {
+          ignoreSenderFor10Min(incomingInviteData.fromUid, incomingInviteData.fromName);
+          sendMultiMsg({
+            type: "FRIEND_INVITE_DECLINED",
+            roomCode: incomingInviteData.roomCode,
+            fromName: myNickname,
+            targetUid: incomingInviteData.fromUid,
+            targetName: incomingInviteData.fromName
+          });
+          showInviteToast(`🔕 [${incomingInviteData.fromName}]님의 초대를 10분간 무시합니다.`);
+        }
+        hideFriendInviteModal();
+      }
+
+      function toPlayerUidPeerId(uid) {
+        return "pr10p-uid-" + String(uid || "").toLowerCase().replace(/[^a-z0-9]/g, "");
       }
 
       function toPlayerNickPeerId(nick) {
@@ -2369,15 +2585,14 @@
         return "pr10p-nick-" + Math.abs(hash).toString(36);
       }
 
-      function inviteFriendToRoom(friendName) {
-        const cleanFriend = String(friendName || "").trim();
-        if (!cleanFriend) return;
+      // 내가 친구 추가한 사람은 상대방이 나를 추가하지 않았어도 바로 초대 전송
+      function inviteFriendToRoom(friendObj) {
+        if (!friendObj || !friendObj.name) return;
+        const cleanFriend = friendObj.name;
 
+        // 아직 방이 없다면 로비 맨 아래에 4자리 방 코드 + 5x2 대기실을 즉시 생성
         if (!activeRoomCode) {
           openCreateRoomLobby();
-        } else if (currentScreen !== "ROOM_LOBBY") {
-          renderRoomLobbyGrid();
-          setScreen("ROOM_LOBBY");
         }
 
         const codeInput = document.getElementById("room-code-input");
@@ -2388,85 +2603,87 @@
           type: "FRIEND_INVITE",
           roomCode: activeRoomCode,
           fromName: myNickname,
-          targetName: cleanFriend,
-          fromPeerId: mainPeer && mainPeer.id ? mainPeer.id : ""
+          fromUid: MY_PERSISTENT_UID,
+          targetUid: friendObj.uid || "",
+          targetName: cleanFriend
         };
 
         sendMultiMsg(invitePayload);
 
-        // 친구의 닉네임 채널 및 저장된 피어 ID로도 직접 초대 팝업 패킷 전송
-        const friendObj = friendList.find(f => f.name === cleanFriend);
-        const candidatePeerIds = new Set([toPlayerNickPeerId(cleanFriend)]);
-        if (friendObj && friendObj.peerId) candidatePeerIds.add(friendObj.peerId);
+        // 상대방의 고유 UID 피어와 닉네임 피어로 직접 P2P 패킷 전송 (일방 친구 초대 보장)
+        const targets = new Set([toPlayerNickPeerId(cleanFriend)]);
+        if (friendObj.uid) targets.add(toPlayerUidPeerId(friendObj.uid));
 
-        candidatePeerIds.forEach(pid => {
+        targets.forEach(pid => {
           if (!mainPeer || !peerReady || pid === mainPeer.id) return;
           try {
             const directConn = mainPeer.connect(pid, { reliable: true });
             if (directConn) {
               directConn.on("open", () => {
-                directConn.send({ senderId: MY_CLIENT_ID, ...invitePayload });
+                directConn.send({ senderId: MY_PERSISTENT_UID, ...invitePayload });
               });
             }
           } catch (e) {}
         });
 
         SoundEngine.playItemPickup();
-        showInviteToast(`📨 [${cleanFriend}]님에게 초대 팝업을 보냈습니다! (방 코드: ${activeRoomCode})`);
+        showInviteToast(`📨 [${cleanFriend}]님에게 방 [${activeRoomCode}] 초대 팝업을 보냈습니다!`);
       }
 
       function renderFriendsLists() {
-        const configs = [
-          { countId: "lobby-friends-count", listId: "lobby-friends-list" },
-          { countId: "room-friends-count", listId: "room-friends-list" }
-        ];
+        const countEl = document.getElementById("lobby-friends-count");
+        const listEl = document.getElementById("lobby-friends-list");
+        const onlineCount = friendList.filter(f => isFriendOnline(f)).length;
 
-        configs.forEach(({ countId, listId }) => {
-          const countEl = document.getElementById(countId);
-          const listEl = document.getElementById(listId);
-          if (countEl) {
-            countEl.textContent = `👥 친구 목록 (${friendList.length}명)`;
+        if (countEl) {
+          countEl.textContent = `👥 친구 목록 (${friendList.length}명 · 🟢 온라인 ${onlineCount}명)`;
+        }
+        if (!listEl) return;
+
+        if (friendList.length === 0) {
+          listEl.innerHTML = `<span style="font-size:11px;color:#64748b;padding:3px 2px;">아직 추가한 친구가 없습니다. 레이스 종료 후 순위표에서 이름 옆 '+' 버튼을 눌러 친구를 추가해보세요!</span>`;
+          return;
+        }
+
+        listEl.innerHTML = "";
+        friendList.forEach(friend => {
+          const online = isFriendOnline(friend);
+          const chip = document.createElement("div");
+          chip.className = "friend-chip";
+          const imgUrl = getSkinPortraitDataUrl(friend.skinId);
+          const dotHtml = online
+            ? `<span class="status-dot-online" title="온라인"></span>`
+            : `<span class="status-dot-offline" title="오프라인"></span>`;
+
+          chip.innerHTML = `
+            ${dotHtml}
+            ${imgUrl ? `<img src="${imgUrl}" alt="${friend.name}" />` : ""}
+            <span>${friend.name}</span>
+            <span style="font-size:9.5px;color:${online ? "#4ade80" : "#94a3b8"};">${online ? "온라인" : "오프라인"}</span>
+            <button type="button" class="btn-invite-friend">📨 초대</button>
+            <button type="button" class="btn-remove-friend" title="친구 삭제">✕</button>
+          `;
+          const inviteBtn = chip.querySelector(".btn-invite-friend");
+          const removeBtn = chip.querySelector(".btn-remove-friend");
+          if (inviteBtn) {
+            inviteBtn.onclick = (e) => {
+              if (e) e.stopPropagation();
+              SoundEngine.unlock();
+              inviteFriendToRoom(friend);
+            };
           }
-          if (!listEl) return;
-
-          if (friendList.length === 0) {
-            listEl.innerHTML = `<span style="font-size:11px;color:#64748b;padding:3px 2px;">아직 등록된 친구가 없습니다. 레이스 종료 후 순위표에서 이름 옆 '+' 버튼을 눌러 친구를 추가해보세요!</span>`;
-            return;
+          if (removeBtn) {
+            removeBtn.onclick = (e) => {
+              if (e) e.stopPropagation();
+              removeFriend(friend.uid, friend.name);
+            };
           }
-
-          listEl.innerHTML = "";
-          friendList.forEach(friend => {
-            const chip = document.createElement("div");
-            chip.className = "friend-chip";
-            const imgUrl = getSkinPortraitDataUrl(friend.skinId);
-            chip.innerHTML = `
-              ${imgUrl ? `<img src="${imgUrl}" alt="${friend.name}" />` : ""}
-              <span>${friend.name}</span>
-              <button type="button" class="btn-invite-friend">📨 초대</button>
-              <button type="button" class="btn-remove-friend" title="친구 삭제">✕</button>
-            `;
-            const inviteBtn = chip.querySelector(".btn-invite-friend");
-            const removeBtn = chip.querySelector(".btn-remove-friend");
-            if (inviteBtn) {
-              inviteBtn.onclick = (e) => {
-                if (e) e.stopPropagation();
-                SoundEngine.unlock();
-                inviteFriendToRoom(friend.name);
-              };
-            }
-            if (removeBtn) {
-              removeBtn.onclick = (e) => {
-                if (e) e.stopPropagation();
-                removeFriend(friend.name);
-              };
-            }
-            listEl.appendChild(chip);
-          });
+          listEl.appendChild(chip);
         });
       }
 
       // ==========================================
-      // 6. 닉네임, PeerJS WebRTC + BroadcastChannel 실시간 멀티플레이어 (사람 전용)
+      // 6. 닉네임, PeerJS WebRTC + BroadcastChannel 실시간 멀티플레이어
       // ==========================================
       const DEFAULT_NICK = "러너" + Math.floor(100 + Math.random() * 900);
       let myNickname = (safeGetStorage("parkour_nickname", "") || "").trim() || DEFAULT_NICK;
@@ -2478,16 +2695,17 @@
         return val || myNickname || DEFAULT_NICK;
       }
 
-      function generateFiveDigitRoomCode() {
-        return String(Math.floor(10000 + Math.random() * 90000));
+      // 4자리 숫자 방 코드 생성 (1000 ~ 9999)
+      function generateFourDigitRoomCode() {
+        return String(Math.floor(1000 + Math.random() * 9000));
       }
 
       function normalizeRoomCode(raw) {
-        return String(raw || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+        return String(raw || "").trim().replace(/[^0-9]/g, "").slice(0, 4);
       }
 
       function toRoomPeerId(code) {
-        return "pr10p-rm-" + normalizeRoomCode(code).toLowerCase();
+        return "pr10p-rm4-" + normalizeRoomCode(code);
       }
 
       function toMmSlotPeerId(slotIndex) {
@@ -2552,9 +2770,10 @@
         roomChannel = null;
       }
 
-      // PeerJS P2P 연결 관리 + 닉네임 초대 수신 전용 피어
+      // PeerJS P2P 연결 관리 + UID/닉네임 초대 수신 + 온라인 프레즌스 하트비트
       let mainPeer = null;
-      let nickInvitePeer = null;
+      let uidListenerPeer = null;
+      let nickListenerPeer = null;
       let peerReady = false;
       const peerConns = new Map();
       let mmLobbyPeer = null;
@@ -2562,26 +2781,48 @@
       let mmOutboundConns = new Map();
       let lastPosSyncSentAt = 0;
 
-      function initNickInviteListenerPeer() {
+      function initPersonalListenerPeers() {
         if (typeof window.Peer === "undefined") return;
-        const desiredNickPeerId = toPlayerNickPeerId(myNickname);
-        if (nickInvitePeer && !nickInvitePeer.destroyed && nickInvitePeer.id === desiredNickPeerId) return;
 
-        if (nickInvitePeer) {
-          try { nickInvitePeer.destroy(); } catch (e) {}
-          nickInvitePeer = null;
+        // 1) 영구 UID 기반 수신 피어 (상대방이 나를 친구 추가하지 않았어도 UID로 직접 초대 수신 가능)
+        const myUidPeerId = toPlayerUidPeerId(MY_PERSISTENT_UID);
+        if (!uidListenerPeer || uidListenerPeer.destroyed) {
+          try {
+            const up = new window.Peer(myUidPeerId, {
+              debug: 0,
+              config: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] }
+            });
+            uidListenerPeer = up;
+            up.on("connection", (conn) => {
+              peerConns.set(conn.peer, conn);
+              conn.on("data", (d) => handleIncomingNetworkMsg(d));
+              conn.on("close", () => peerConns.delete(conn.peer));
+            });
+            up.on("error", () => {});
+          } catch (e) {}
         }
-        try {
-          const np = new window.Peer(desiredNickPeerId, {
-            debug: 0,
-            config: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] }
-          });
-          nickInvitePeer = np;
-          np.on("connection", (conn) => {
-            conn.on("data", (d) => handleIncomingNetworkMsg(d));
-          });
-          np.on("error", () => {});
-        } catch (e) {}
+
+        // 2) 닉네임 기반 보조 수신 피어
+        const desiredNickPeerId = toPlayerNickPeerId(myNickname);
+        if (!nickListenerPeer || nickListenerPeer.destroyed || nickListenerPeer.id !== desiredNickPeerId) {
+          if (nickListenerPeer) {
+            try { nickListenerPeer.destroy(); } catch (e) {}
+            nickListenerPeer = null;
+          }
+          try {
+            const np = new window.Peer(desiredNickPeerId, {
+              debug: 0,
+              config: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] }
+            });
+            nickListenerPeer = np;
+            np.on("connection", (conn) => {
+              peerConns.set(conn.peer, conn);
+              conn.on("data", (d) => handleIncomingNetworkMsg(d));
+              conn.on("close", () => peerConns.delete(conn.peer));
+            });
+            np.on("error", () => {});
+          } catch (e) {}
+        }
       }
 
       function attachDataConn(conn) {
@@ -2591,12 +2832,21 @@
 
         conn.on("open", () => {
           peerConns.set(remoteId, conn);
+          // 연결 즉시 내 온라인 상태 전송
+          conn.send({
+            type: "PRESENCE_PING",
+            senderId: MY_PERSISTENT_UID,
+            uid: MY_PERSISTENT_UID,
+            name: myNickname,
+            skinId: selectedSkinId
+          });
+
           if (activeRoomCode) {
             if (isRoomHost) {
               conn.send({
                 type: "ROOM_SYNC",
                 roomCode: activeRoomCode,
-                senderId: MY_CLIENT_ID,
+                senderId: MY_PERSISTENT_UID,
                 members: roomParticipants,
                 gameMode: selectedGameMode
               });
@@ -2604,12 +2854,11 @@
               conn.send({
                 type: "JOIN_REQUEST",
                 roomCode: activeRoomCode,
-                senderId: MY_CLIENT_ID,
+                senderId: MY_PERSISTENT_UID,
                 member: {
-                  id: MY_CLIENT_ID,
+                  id: MY_PERSISTENT_UID,
                   name: myNickname,
                   skinId: selectedSkinId,
-                  peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
                   isHost: false,
                   isAI: false
                 }
@@ -2618,12 +2867,11 @@
           } else if (currentScreen === "MATCHMAKING") {
             conn.send({
               type: "MM_PING",
-              senderId: MY_CLIENT_ID,
+              senderId: MY_PERSISTENT_UID,
               member: {
-                id: MY_CLIENT_ID,
+                id: MY_PERSISTENT_UID,
                 name: myNickname,
                 skinId: selectedSkinId,
-                peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
                 isAI: false,
                 joinedAt: Date.now()
               },
@@ -2656,7 +2904,7 @@
       }
 
       function initMainPeer(customId = null) {
-        initNickInviteListenerPeer();
+        initPersonalListenerPeers();
         if (typeof window.Peer === "undefined") {
           setNetBadge("connecting", "⚡ 로컬/탭 연결 모드");
           return;
@@ -2669,7 +2917,7 @@
           peerReady = false;
           setNetBadge("connecting", "⏳ P2P 서버 연결중...");
 
-          const peerId = customId || ("pr10p-u-" + MY_CLIENT_ID.toLowerCase() + "-" + Math.random().toString(36).slice(2, 6));
+          const peerId = customId || ("pr10p-u-" + MY_PERSISTENT_UID.toLowerCase() + "-" + Math.random().toString(36).slice(2, 6));
           mainPeer = new window.Peer(peerId, {
             debug: 0,
             config: {
@@ -2682,7 +2930,8 @@
 
           mainPeer.on("open", () => {
             peerReady = true;
-            setNetBadge("ok", "🟢 온라인 P2P 연결됨 (다른 기기 지원)");
+            setNetBadge("ok", "🟢 온라인 P2P 연결됨");
+            broadcastPresenceHeartbeat();
           });
 
           mainPeer.on("connection", (conn) => {
@@ -2693,7 +2942,7 @@
             const errType = err && err.type ? err.type : "";
             if (errType === "id-taken") {
               setNetBadge("error", "⚠️ 이미 사용 중인 방 코드입니다");
-              setLobbyStatus("⚠️ 같은 코드의 방이 이미 열려 있습니다. 새 방을 만들거나 다른 코드를 입력하세요.");
+              setLobbyStatus("⚠️ 같은 코드의 방이 이미 열려 있습니다. 다시 방 만들기를 눌러주세요.");
               return;
             }
             if (errType === "peer-unavailable") {
@@ -2716,9 +2965,44 @@
         }
       }
 
+      // 친구 온라인/오프라인 초록 점 갱신을 위한 주기적 하트비트
+      function broadcastPresenceHeartbeat() {
+        const pingPayload = {
+          type: "PRESENCE_PING",
+          uid: MY_PERSISTENT_UID,
+          name: myNickname,
+          skinId: selectedSkinId
+        };
+        sendMultiMsg(pingPayload);
+
+        // 친구 목록에 등록된 친구들의 UID/닉네임 피어로 온라인 확인 핑 전송
+        if (mainPeer && peerReady) {
+          friendList.forEach(f => {
+            const targets = new Set();
+            if (f.uid) targets.add(toPlayerUidPeerId(f.uid));
+            if (f.name) targets.add(toPlayerNickPeerId(f.name));
+            targets.forEach(pid => {
+              if (pid === mainPeer.id) return;
+              const existing = peerConns.get(pid);
+              if (existing && existing.open) {
+                try {
+                  existing.send({ senderId: MY_PERSISTENT_UID, ...pingPayload });
+                } catch (e) {}
+              } else {
+                connectToPeerId(pid);
+              }
+            });
+          });
+        }
+
+        if (currentScreen === "LOBBY") {
+          renderFriendsLists();
+        }
+      }
+
       function sendMultiMsg(payload) {
         const msg = {
-          senderId: MY_CLIENT_ID,
+          senderId: MY_PERSISTENT_UID,
           ...payload
         };
 
@@ -2778,8 +3062,7 @@
             id: String(m.id),
             name: String(m.name || "플레이어").slice(0, 10),
             skinId: SKINS[m.skinId] ? Number(m.skinId) : 0,
-            peerId: typeof m.peerId === "string" ? m.peerId : "",
-            isMe: m.id === MY_CLIENT_ID,
+            isMe: m.id === MY_PERSISTENT_UID,
             isHost: !!m.isHost,
             isAI: false,
             joinedAt: Number(m.joinedAt) || 0
@@ -2893,12 +3176,11 @@
               conn.on("open", () => {
                 conn.send({
                   type: "MM_PING",
-                  senderId: MY_CLIENT_ID,
+                  senderId: MY_PERSISTENT_UID,
                   member: {
-                    id: MY_CLIENT_ID,
+                    id: MY_PERSISTENT_UID,
                     name: myNickname,
                     skinId: selectedSkinId,
-                    peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
                     isAI: false,
                     joinedAt: Date.now()
                   },
@@ -2926,10 +3208,9 @@
         safeSetStorage("parkour_nickname", myNickname);
 
         const meObj = {
-          id: MY_CLIENT_ID,
+          id: MY_PERSISTENT_UID,
           name: myNickname,
           skinId: selectedSkinId,
-          peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
           isMe: true,
           isHost: false,
           isAI: false,
@@ -2949,10 +3230,9 @@
           sendMultiMsg({
             type: "MM_PING",
             member: {
-              id: MY_CLIENT_ID,
+              id: MY_PERSISTENT_UID,
               name: myNickname,
               skinId: selectedSkinId,
-              peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
               isAI: false,
               joinedAt: meObj.joinedAt
             },
@@ -2971,12 +3251,11 @@
                   c.on("open", () => {
                     c.send({
                       type: "MM_PING",
-                      senderId: MY_CLIENT_ID,
+                      senderId: MY_PERSISTENT_UID,
                       member: {
-                        id: MY_CLIENT_ID,
+                        id: MY_PERSISTENT_UID,
                         name: myNickname,
                         skinId: selectedSkinId,
-                        peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
                         isAI: false,
                         joinedAt: meObj.joinedAt
                       },
@@ -2996,20 +3275,20 @@
         matchmakingTimer = setInterval(pollMatchmaking, 1100);
       }
 
-      // --- 방 만들기 / 방 참가 (5자리 코드 · 100% 사람 전용 방 · 오직 '🚪 방 나가기'로만 퇴장) ---
+      // --- 로비 맨 밑 고정 5x2 대기실 & 4자리 숫자 방 코드 (방 만들기 시 화면 전환 없음) ---
       function renderRoomLobbyGrid() {
-        const titleEl = document.getElementById("room-lobby-title");
         const subEl = document.getElementById("room-lobby-subtitle");
         const gridEl = document.getElementById("room-lobby-grid");
         roomParticipants = sanitizeHumanRoomMembers(roomParticipants);
 
-        if (titleEl) {
-          titleEl.textContent = `🏠 방 대기실 [${activeRoomCode}] · 5×2 대열`;
-        }
+        updateLobbyEmbeddedRoomUI();
+
         if (subEl) {
           const modeTitle = GAME_MODES[selectedGameMode]?.label || "⚡ 스피드 전";
-          const roleHint = isRoomHost ? "방장 (▶ 레이스 시작 가능)" : "게스트 (방장 시작 대기중)";
-          subEl.textContent = `현재 입장 인원: ${roomParticipants.length} / 10명 · ${roleHint} · 모드: ${modeTitle}`;
+          const roleHint = isRoomHost
+            ? "👑 방장 · 친구들이 모이면 '▶ 지금 인원으로 시작하기'를 누르세요!"
+            : "👤 참가자 · 방장이 '지금 인원으로 시작하기'를 누르면 출발합니다.";
+          subEl.textContent = `현재 입장 인원: ${roomParticipants.length} / 10명 · 모드: ${modeTitle} · ${roleHint}`;
         }
         if (!gridEl) return;
 
@@ -3026,9 +3305,9 @@
                 <span class="lineup-role-badge bot">사람 전용</span>
               </div>
               <div class="lineup-skin-img-wrap" style="border-style:dashed;border-color:#475569;">
-                <span style="font-size:18px;color:#64748b;">👤</span>
+                <span style="font-size:17px;color:#64748b;">👤</span>
               </div>
-              <div class="lineup-nick" style="color:#94a3b8;font-size:10.5px;">빈 자리 (사람 전용)</div>
+              <div class="lineup-nick" style="color:#94a3b8;font-size:10px;">빈 자리 (사람 전용)</div>
               <div class="lineup-skin-name">코드 [${activeRoomCode}]</div>
             `;
             gridEl.appendChild(card);
@@ -3038,24 +3317,24 @@
           const skin = SKINS[p.skinId] || SKINS[0];
           const imgUrl = getSkinPortraitDataUrl(p.skinId);
           card.className = "lineup-card " + (p.isMe ? "me" : "joined");
-          const badgeText = p.isHost ? "방장" : (p.isMe ? "나 (게스트)" : "게스트");
+          const badgeText = p.isHost ? "방장" : (p.isMe ? "나 (참가자)" : "참가자");
           card.innerHTML = `
             <div class="lineup-slot-row">
               <span style="color:#94a3b8;">#${String(i + 1).padStart(2, "0")}</span>
               <span class="lineup-role-badge ${p.isMe ? "me" : "joined"}">${badgeText}</span>
             </div>
             <div class="lineup-skin-img-wrap" style="border-color:${skin.band};">
-              ${imgUrl ? `<img class="lineup-skin-img" src="${imgUrl}" alt="${skin.name}" />` : `<div style="width:28px;height:28px;background:${skin.body};border-radius:6px;"></div>`}
+              ${imgUrl ? `<img class="lineup-skin-img" src="${imgUrl}" alt="${skin.name}" />` : `<div style="width:26px;height:26px;background:${skin.body};border-radius:6px;"></div>`}
             </div>
             <div class="lineup-nick">${p.isHost ? "👑 " + p.name : "👤 " + p.name}</div>
             <div class="lineup-skin-name">${skin.name}</div>
           `;
           gridEl.appendChild(card);
         }
-        updateActiveRoomBannerUI();
         renderFriendsLists();
       }
 
+      // 방 만들기: 다른 화면으로 넘어가지 않고 로비 맨 밑 5x2 대기실 + 위에 4자리 방 코드 표시
       function openCreateRoomLobby() {
         clearTimers();
         stopMatchmakingLoop();
@@ -3067,31 +3346,38 @@
         }
 
         isRoomHost = true;
-        activeRoomCode = generateFiveDigitRoomCode();
+        activeRoomCode = generateFourDigitRoomCode();
         const codeInput = document.getElementById("room-code-input");
         if (codeInput) codeInput.value = activeRoomCode;
 
         initMainPeer(toRoomPeerId(activeRoomCode));
         roomParticipants = sanitizeHumanRoomMembers([
           {
-            id: MY_CLIENT_ID,
+            id: MY_PERSISTENT_UID,
             name: myNickname,
             skinId: selectedSkinId,
-            peerId: toRoomPeerId(activeRoomCode),
             isMe: true,
             isHost: true,
             isAI: false
           }
         ]);
 
+        setScreen("LOBBY");
         renderRoomLobbyGrid();
-        setScreen("ROOM_LOBBY");
+        setLobbyStatus(`🏠 방 [${activeRoomCode}] 생성 완료! 아래 5×2 대기실에서 친구 입장을 확인하고 '지금 인원으로 시작하기'를 누르세요.`);
         broadcastRoomEvent({ type: "ROOM_SYNC", members: roomParticipants, gameMode: selectedGameMode });
+
+        // 모바일·PC에서 로비 맨 밑 대기실이 바로 보이도록 스크롤 이동
+        const bottomPanel = document.getElementById("lobby-bottom-room-panel");
+        if (bottomPanel && typeof bottomPanel.scrollIntoView === "function") {
+          bottomPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
       }
 
+      // 방 참가: 로비 맨 밑 5x2 대기실에 합류 (방장이 아니므로 시작하기 버튼 숨김)
       function joinCustomHumanRoom(code) {
         const cleanCode = normalizeRoomCode(code);
-        if (cleanCode.length < 4) return;
+        if (cleanCode.length !== 4) return;
 
         clearTimers();
         stopMatchmakingLoop();
@@ -3112,10 +3398,9 @@
         }
         roomParticipants = sanitizeHumanRoomMembers([
           {
-            id: MY_CLIENT_ID,
+            id: MY_PERSISTENT_UID,
             name: myNickname,
             skinId: selectedSkinId,
-            peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
             isMe: true,
             isHost: false,
             isAI: false
@@ -3123,8 +3408,14 @@
         ]);
 
         setNetBadge("connecting", `🔍 방 [${activeRoomCode}] 연결중...`);
+        setScreen("LOBBY");
         renderRoomLobbyGrid();
-        setScreen("ROOM_LOBBY");
+        setLobbyStatus(`🔍 방 [${activeRoomCode}]에 접속 중입니다. 방장이 시작하기를 누를 때까지 대기하세요.`);
+
+        const bottomPanel = document.getElementById("lobby-bottom-room-panel");
+        if (bottomPanel && typeof bottomPanel.scrollIntoView === "function") {
+          bottomPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
 
         const hostPeerId = toRoomPeerId(activeRoomCode);
         let attempts = 0;
@@ -3135,12 +3426,11 @@
             existing.send({
               type: "JOIN_REQUEST",
               roomCode: activeRoomCode,
-              senderId: MY_CLIENT_ID,
+              senderId: MY_PERSISTENT_UID,
               member: {
-                id: MY_CLIENT_ID,
+                id: MY_PERSISTENT_UID,
                 name: myNickname,
                 skinId: selectedSkinId,
-                peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
                 isHost: false,
                 isAI: false
               }
@@ -3153,10 +3443,9 @@
           broadcastRoomEvent({
             type: "JOIN_REQUEST",
             member: {
-              id: MY_CLIENT_ID,
+              id: MY_PERSISTENT_UID,
               name: myNickname,
               skinId: selectedSkinId,
-              peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
               isHost: false,
               isAI: false
             }
@@ -3166,7 +3455,7 @@
             setTimeout(tryConnectHost, 800);
           } else if (roomParticipants.length <= 1) {
             setNetBadge("error", `⚠️ 방 [${activeRoomCode}]을 찾을 수 없음`);
-            showInviteToast(`⚠️ 방 [${activeRoomCode}]에 연결되지 않았습니다. 방장이 방을 만들었는지·코드가 맞는지 확인해 주세요!`);
+            showInviteToast(`⚠️ 방 [${activeRoomCode}]에 연결되지 않았습니다. 방장이 방을 만들었는지·4자리 코드가 맞는지 확인해 주세요!`);
           }
         };
 
@@ -3183,19 +3472,33 @@
         roomParticipants = [];
         lastLaunchKind = "BOT";
 
-        if (mainPeer && mainPeer.id && mainPeer.id.startsWith("pr10p-rm-")) {
+        if (mainPeer && mainPeer.id && mainPeer.id.startsWith("pr10p-rm4-")) {
           initMainPeer();
         }
-        updateActiveRoomBannerUI();
+        updateLobbyEmbeddedRoomUI();
         setScreen("LOBBY");
         setLobbyStatus("🚪 방에서 나갔습니다.");
       }
 
       function handleIncomingNetworkMsg(msg) {
-        if (!msg || msg.senderId === MY_CLIENT_ID) return;
+        if (!msg || msg.senderId === MY_PERSISTENT_UID) return;
+
+        // 0) 온라인 상태 하트비트 수신 -> 초록 점 갱신
+        if (msg.type === "PRESENCE_PING") {
+          markPlayerOnline(msg.uid || msg.senderId, msg.name || "", msg.skinId || 0);
+          if (currentScreen === "LOBBY") {
+            renderFriendsLists();
+          }
+          return;
+        }
+
+        if (msg.senderId) {
+          markPlayerOnline(msg.senderId, msg.fromName || msg.name || "", msg.skinId || 0);
+        }
 
         // 1) 10인 랜덤 매치 (100% 사람 전용 매칭 동기화)
         if (msg.type === "MM_PING" && msg.member && !msg.member.isAI) {
+          markPlayerOnline(msg.member.id, msg.member.name, msg.member.skinId);
           if (currentScreen === "MATCHMAKING") {
             const prevCount = matchmakingQueue.length;
             const merged = sanitizeHumanRoomMembers([
@@ -3208,10 +3511,9 @@
               sendMultiMsg({
                 type: "MM_PING",
                 member: {
-                  id: MY_CLIENT_ID,
+                  id: MY_PERSISTENT_UID,
                   name: myNickname,
                   skinId: selectedSkinId,
-                  peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
                   isAI: false
                 },
                 gameMode: selectedGameMode
@@ -3221,7 +3523,7 @@
 
             if (matchmakingQueue.length >= 10) {
               const leaderId = matchmakingQueue.map(m => m.id).sort()[0];
-              if (leaderId === MY_CLIENT_ID) {
+              if (leaderId === MY_PERSISTENT_UID) {
                 startMatchmakingRaceNow();
               }
             }
@@ -3257,17 +3559,22 @@
           return;
         }
 
-        // 2) 실시간 친구 방 초대 팝업 수신 ("00님이 초대했어요" · 수락 / 거절)
+        // 2) 실시간 친구 방 초대 팝업 수신 ("00님이 초대했어요" · 수락 / 거절 / 10분간 무시하기)
         if (msg.type === "FRIEND_INVITE" && msg.roomCode) {
+          const targetUid = String(msg.targetUid || "").trim();
           const targetName = String(msg.targetName || "").trim();
-          if (!targetName || targetName === myNickname) {
-            showFriendInviteModal(msg.fromName || "친구", msg.roomCode, msg.fromPeerId || "");
+          const isForMe = (targetUid && targetUid === MY_PERSISTENT_UID) || (!targetUid && (!targetName || targetName === myNickname));
+          if (isForMe) {
+            showFriendInviteModal(msg.fromName || "친구", msg.roomCode, msg.fromUid || msg.senderId || "");
           }
           return;
         }
 
         if (msg.type === "FRIEND_INVITE_DECLINED" && msg.fromName) {
-          if (!msg.targetName || msg.targetName === myNickname) {
+          const targetUid = String(msg.targetUid || "").trim();
+          const targetName = String(msg.targetName || "").trim();
+          const isForMe = (targetUid && targetUid === MY_PERSISTENT_UID) || (!targetUid && (!targetName || targetName === myNickname));
+          if (isForMe) {
             showInviteToast(`❌ [${msg.fromName}]님이 방 초대를 거절했습니다.`);
           }
           return;
@@ -3299,10 +3606,11 @@
           return;
         }
 
-        // 4) 사람 전용 커스텀 방 동기화 (로비에 돌아와 있어도 activeRoomCode가 유지되면 상태 갱신)
+        // 4) 로비 하단 5x2 사람 전용 방 동기화
         if (!activeRoomCode || normalizeRoomCode(msg.roomCode) !== normalizeRoomCode(activeRoomCode)) return;
 
         if (msg.type === "JOIN_REQUEST" && msg.member && !msg.member.isAI) {
+          markPlayerOnline(msg.member.id, msg.member.name, msg.member.skinId);
           const next = sanitizeHumanRoomMembers([...roomParticipants, { ...msg.member, isAI: false }]);
           if (next.length !== roomParticipants.length) {
             SoundEngine.playItemPickup();
@@ -3314,13 +3622,15 @@
             broadcastRoomEvent({ type: "ROOM_SYNC", members: roomParticipants, gameMode: selectedGameMode });
           }
         } else if (msg.type === "ROOM_SYNC" && Array.isArray(msg.members)) {
+          msg.members.forEach(m => {
+            if (m && m.id && m.id !== MY_PERSISTENT_UID) markPlayerOnline(m.id, m.name, m.skinId);
+          });
           const merged = sanitizeHumanRoomMembers([
             ...msg.members,
             {
-              id: MY_CLIENT_ID,
+              id: MY_PERSISTENT_UID,
               name: myNickname,
               skinId: selectedSkinId,
-              peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
               isMe: true,
               isHost: isRoomHost,
               isAI: false
@@ -3329,12 +3639,14 @@
           roomParticipants = merged;
           setNetBadge("ok", `🟢 방 [${activeRoomCode}] 연결됨 (${merged.length}명)`);
           if (msg.gameMode && GAME_MODES[msg.gameMode]) {
-            selectRaceMode(msg.gameMode);
+            selectedGameMode = msg.gameMode;
+            renderModeUI();
           }
           renderRoomLobbyGrid();
         } else if (msg.type === "START_RACE") {
           if (msg.gameMode && GAME_MODES[msg.gameMode]) {
-            selectRaceMode(msg.gameMode);
+            selectedGameMode = msg.gameMode;
+            renderModeUI();
           }
           const humanPeers = sanitizeHumanRoomMembers(msg.members || roomParticipants).filter(p => !p.isMe);
           lastLaunchKind = "ROOM";
@@ -3799,8 +4111,8 @@
           const peer = safeHumans[i];
           result.push({
             id: peer.id,
+            uid: peer.id,
             name: peer.name,
-            peerId: peer.peerId || "",
             isBot: false,
             isRoomPeer: true,
             x: currentCourse.startX,
@@ -3836,8 +4148,8 @@
           const skinId = (selectedSkinId + idx + 1) % SKINS.length;
           result.push({
             id: "BOT_" + idx,
+            uid: "",
             name,
-            peerId: "",
             isBot: true,
             isRoomPeer: false,
             x: currentCourse.startX,
@@ -4449,13 +4761,17 @@
         renderModeUI();
         renderLobbySkinGrid();
         renderFriendsLists();
-        updateActiveRoomBannerUI();
+        if (activeRoomCode) {
+          renderRoomLobbyGrid();
+        } else {
+          updateLobbyEmbeddedRoomUI();
+        }
         setScreen("LOBBY");
 
         if (msg) {
           setLobbyStatus(msg);
         } else if (activeRoomCode) {
-          setLobbyStatus(`🏠 방 [${activeRoomCode}] 연결이 유지되고 있습니다. 방을 나가려면 상단 '🚪 방 나가기'를 누르세요.`);
+          setLobbyStatus(`🏠 방 [${activeRoomCode}] 연결이 유지되고 있습니다. 방을 나가려면 아래 '🚪 방 나가기'를 누르세요.`);
         } else {
           setLobbyStatus("원하는 모드와 스킨을 고른 뒤 랜덤 매치(사람 10인), 훈련장, AI 대전 또는 방 만들기를 눌러보세요!");
         }
@@ -4473,9 +4789,9 @@
         const all = [
           {
             id: "ME",
+            uid: MY_PERSISTENT_UID,
             name: myNickname,
             skinId: selectedSkinId,
-            peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
             progress: getProgress(player.x),
             finished: player.finished,
             finishTime: player.finishTime,
@@ -4483,9 +4799,9 @@
           },
           ...racers.map(r => ({
             id: r.id,
+            uid: r.uid || (r.isRoomPeer ? r.id : ""),
             name: r.name,
             skinId: r.skinId,
-            peerId: r.peerId || "",
             progress: r.progress,
             finished: r.finished,
             finishTime: r.finishTime,
@@ -4571,19 +4887,19 @@
             nameWrap.appendChild(nameText);
 
             if (!s.isMe) {
-              const alreadyFriend = isFriendName(s.name);
+              const alreadyFriend = isFriendEntry(s.uid, s.name);
               const addBtn = document.createElement("button");
               addBtn.type = "button";
               addBtn.className = "btn-add-friend" + (alreadyFriend ? " added" : "");
               addBtn.textContent = alreadyFriend ? "✓ 친구" : "+";
-              addBtn.title = alreadyFriend ? "이미 친구입니다" : `${s.name} 친구 추가`;
+              addBtn.title = alreadyFriend ? "이미 친구입니다" : `${s.name} 친구 추가 (상대가 추가 안 해도 초대 가능)`;
               addBtn.onclick = (e) => {
                 if (e) e.stopPropagation();
                 SoundEngine.unlock();
-                if (addFriend(s.name, s.skinId, s.peerId)) {
+                if (addFriend(s.name, s.skinId, s.uid)) {
                   addBtn.classList.add("added");
                   addBtn.textContent = "✓ 친구";
-                  showInviteToast(`👥 [${s.name}]님을 친구로 추가했습니다! 로비에서 방으로 초대할 수 있어요.`);
+                  showInviteToast(`👥 [${s.name}]님을 친구로 추가했습니다! 상대방이 추가하지 않아도 바로 초대할 수 있어요.`);
                 }
               };
               nameWrap.appendChild(addBtn);
@@ -4873,7 +5189,7 @@
             sendMultiMsg({
               type: "RACE_POS",
               roomCode: activeRoomCode || "",
-              playerId: MY_CLIENT_ID,
+              playerId: MY_PERSISTENT_UID,
               name: myNickname,
               skinId: selectedSkinId,
               x: Math.round(player.x),
@@ -5365,22 +5681,13 @@
             openCreateRoomLobby();
             break;
           }
-          case "reopen-active-room": {
-            if (activeRoomCode) {
-              renderRoomLobbyGrid();
-              setScreen("ROOM_LOBBY");
-            }
-            break;
-          }
-          case "back-to-lobby-keep-room": {
-            exitToLobby();
-            break;
-          }
           case "leave-room-explicit": {
             leaveActiveRoomExplicitly();
             break;
           }
           case "start-room-race": {
+            // 방장이 아니면 절대 매치를 시작할 수 없도록 이중 보호
+            if (!isRoomHost || !activeRoomCode) return;
             lastLaunchKind = "ROOM";
             const humanMembers = sanitizeHumanRoomMembers(roomParticipants);
             const peers = humanMembers.filter(p => !p.isMe);
@@ -5403,12 +5710,24 @@
           case "join-room": {
             const codeInput = document.getElementById("room-code-input");
             const code = normalizeRoomCode(codeInput ? codeInput.value : "");
-            if (code.length < 4) {
-              setLobbyStatus("⚠️ 4~6자리 방 코드를 입력하거나 먼저 '방 만들기'를 눌러주세요!");
+            if (code.length !== 4) {
+              setLobbyStatus("⚠️ 4자리 숫자 방 코드를 입력한 뒤 방 참가를 눌러주세요.");
               if (codeInput) codeInput.focus();
               return;
             }
             joinCustomHumanRoom(code);
+            break;
+          }
+          case "invite-room": {
+            if (!activeRoomCode) {
+              openCreateRoomLobby();
+            }
+            const codeInput = document.getElementById("room-code-input");
+            if (codeInput) codeInput.value = activeRoomCode;
+            copyTextFallback(activeRoomCode);
+            broadcastRoomEvent({ type: "ROOM_SYNC", members: roomParticipants, gameMode: selectedGameMode });
+            setLobbyStatus(`📋 방 코드 [${activeRoomCode}]가 클립보드에 복사되었습니다!`);
+            showInviteToast(`📋 4자리 숫자 방 코드 [${activeRoomCode}]가 복사되었습니다! 친구에게 알려주세요.`);
             break;
           }
           case "accept-friend-invite": {
@@ -5419,12 +5738,8 @@
             declineIncomingFriendInvite();
             break;
           }
-          case "invite-room": {
-            if (!activeRoomCode) activeRoomCode = generateFiveDigitRoomCode();
-            const codeInput = document.getElementById("room-code-input");
-            if (codeInput) codeInput.value = activeRoomCode;
-            copyTextFallback(activeRoomCode);
-            showInviteToast(`🔗 방 초대 코드 [${activeRoomCode}] 클립보드 복사 완료! 친구에게 코드를 알려주세요.`);
+          case "ignore-friend-invite-10m": {
+            ignoreIncomingFriendInviteFor10Min();
             break;
           }
           case "close-invite-toast": {
@@ -5456,6 +5771,10 @@
             break;
           }
           case "rematch": {
+            if (lastLaunchKind === "ROOM" || activeRoomCode) {
+              exitToLobby();
+              return;
+            }
             if (lastLaunchKind === "TRAINING") {
               startTrainingGround();
             } else if (lastLaunchKind === "RANDOM") {
@@ -5481,42 +5800,101 @@
             tryJump();
             break;
           }
-          default:
-            break;
         }
       }
 
-      function bindTouchControl(id, keyName, onTrigger) {
+      document.querySelectorAll("[data-action]").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          btn.dataset.handledByDirect = "1";
+          const action = btn.getAttribute("data-action");
+          if (action) handleAction(action, btn);
+        });
+      });
+
+      document.addEventListener("click", (e) => {
+        const actionEl = e.target && e.target.closest ? e.target.closest("[data-action]") : null;
+        if (!actionEl) return;
+        if (actionEl.dataset.handledByDirect === "1") return;
+        e.preventDefault();
+        const action = actionEl.getAttribute("data-action");
+        if (action) handleAction(action, actionEl);
+      });
+
+      const sizeSliderEl = document.getElementById("joy-size-slider");
+      const opacitySliderEl = document.getElementById("joy-opacity-slider");
+
+      if (sizeSliderEl) {
+        sizeSliderEl.addEventListener("input", () => {
+          if (!draftJoystickLayout) return;
+          const pct = Math.max(60, Math.min(160, Number(sizeSliderEl.value) || 100));
+          draftJoystickLayout[selectedEditControlKey].scale = pct / 100;
+          const valEl = document.getElementById("joy-size-val");
+          if (valEl) valEl.textContent = pct + "%";
+          renderJoystickEditorHandles();
+        });
+      }
+
+      if (opacitySliderEl) {
+        opacitySliderEl.addEventListener("input", () => {
+          if (!draftJoystickLayout) return;
+          const pct = Math.max(10, Math.min(100, Number(opacitySliderEl.value) || 84));
+          draftJoystickLayout[selectedEditControlKey].opacity = pct / 100;
+          const valEl = document.getElementById("joy-opacity-val");
+          if (valEl) valEl.textContent = pct + "%";
+          renderJoystickEditorHandles();
+        });
+      }
+
+      const nameInput = document.getElementById("player-name-input");
+      if (nameInput) {
+        nameInput.value = myNickname;
+        nameInput.addEventListener("input", () => {
+          const val = nameInput.value.trim().slice(0, 10);
+          if (val) {
+            myNickname = val;
+            safeSetStorage("parkour_nickname", myNickname);
+            initPersonalListenerPeers();
+            if (activeRoomCode) {
+              roomParticipants = roomParticipants.map(m =>
+                m.id === MY_PERSISTENT_UID ? { ...m, name: myNickname } : m
+              );
+              renderRoomLobbyGrid();
+              broadcastRoomEvent({ type: "ROOM_SYNC", members: roomParticipants, gameMode: selectedGameMode });
+            }
+          }
+        });
+      }
+
+      const roomCodeInputEl = document.getElementById("room-code-input");
+      if (roomCodeInputEl) {
+        roomCodeInputEl.addEventListener("input", () => {
+          roomCodeInputEl.value = normalizeRoomCode(roomCodeInputEl.value);
+        });
+      }
+
+      function bindTouchButton(id, keyName, instantFn) {
         const el = document.getElementById(id);
         if (!el) return;
-        let isActive = false;
-
         const press = (e) => {
           if (e && e.cancelable) e.preventDefault();
           SoundEngine.unlock();
-          if (!isActive) {
-            isActive = true;
-            input[keyName] = true;
-            el.classList.add("pressed");
-            if (onTrigger) onTrigger();
-          }
+          input[keyName] = true;
+          el.classList.add("pressed");
+          if (typeof instantFn === "function") instantFn();
         };
-
         const release = (e) => {
           if (e && e.cancelable) e.preventDefault();
-          isActive = false;
           input[keyName] = false;
           el.classList.remove("pressed");
         };
 
         if (window.PointerEvent) {
-          el.addEventListener("pointerdown", (e) => {
-            try { el.setPointerCapture(e.pointerId); } catch (err) {}
-            press(e);
-          });
+          el.addEventListener("pointerdown", press);
           el.addEventListener("pointerup", release);
           el.addEventListener("pointercancel", release);
-          el.addEventListener("lostpointercapture", release);
+          el.addEventListener("pointerleave", release);
         } else {
           el.addEventListener("touchstart", press, { passive: false });
           el.addEventListener("touchend", release, { passive: false });
@@ -5527,160 +5905,64 @@
         }
       }
 
-      function initApp() {
-        try {
-          SoundEngine.updateButtons();
-          updateEconomyUI();
-          renderModeUI();
-          renderLobbySkinGrid();
-          renderFriendsLists();
-          updateWideViewButtonsUI();
-          updateItemButtonUI();
-          updateHandButtonUI();
-          applyJoystickLayoutToPlayButtons(customJoystickLayout);
-          resizeCanvas();
-          initMainPeer();
-        } catch (e) {}
+      bindTouchButton("btn-left", "left");
+      bindTouchButton("btn-right", "right");
+      bindTouchButton("btn-hand", "hand", tryHandGrapple);
+      bindTouchButton("btn-item", "item", activateHeldItem);
+      bindTouchButton("btn-dash", "dash", tryDash);
+      bindTouchButton("btn-jump", "jump", tryJump);
 
-        const nickInput = document.getElementById("player-name-input");
-        if (nickInput) {
-          nickInput.value = myNickname;
-          nickInput.addEventListener("input", () => {
-            const val = nickInput.value.trim().slice(0, 10);
-            if (val) {
-              myNickname = val;
-              safeSetStorage("parkour_nickname", myNickname);
-            }
-          });
-          nickInput.addEventListener("blur", () => {
-            myNickname = getSanitizedNickname();
-            nickInput.value = myNickname;
-            safeSetStorage("parkour_nickname", myNickname);
-            initNickInviteListenerPeer();
-          });
+      window.addEventListener("keydown", (e) => {
+        if (document.activeElement && document.activeElement.tagName === "INPUT") return;
+        SoundEngine.unlock();
+        const k = e.key.toLowerCase();
+        if (k === "arrowleft" || k === "a") input.left = true;
+        if (k === "arrowright" || k === "d") input.right = true;
+        if (k === " " || k === "arrowup" || k === "w") {
+          e.preventDefault();
+          tryJump();
         }
-
-        let lastHandledTs = 0;
-        let lastHandledEl = null;
-        function dispatchUniqueAction(action, el) {
-          const now = performance.now();
-          if (el === lastHandledEl && now - lastHandledTs < 180) return;
-          lastHandledEl = el;
-          lastHandledTs = now;
-          handleAction(action, el);
+        if (k === "shift" || k === "e") tryDash();
+        if (k === "f" || k === "enter") {
+          e.preventDefault();
+          activateHeldItem();
         }
-
-        document.querySelectorAll("[data-action]").forEach(btn => {
-          const action = btn.getAttribute("data-action");
-          if (!action) return;
-          btn.onclick = (e) => {
-            if (e) e.stopPropagation();
-            dispatchUniqueAction(action, btn);
-          };
-        });
-
-        document.addEventListener("click", (e) => {
-          const target = e.target && e.target.closest ? e.target.closest("[data-action]") : null;
-          if (!target) return;
-          const action = target.getAttribute("data-action");
-          if (action) dispatchUniqueAction(action, target);
-        });
-
-        const buyModal = document.getElementById("skin-modal");
-        if (buyModal) {
-          buyModal.addEventListener("click", (e) => {
-            if (e.target === buyModal) closeSkinBuyModal();
-          });
+        if (k === "g") {
+          e.preventDefault();
+          tryHandGrapple();
         }
+        if (k === "v") toggleWideView();
+        if (k === "m") SoundEngine.toggleMute();
+      });
 
-        const joySizeSlider = document.getElementById("joy-size-slider");
-        const joyOpacitySlider = document.getElementById("joy-opacity-slider");
-        if (joySizeSlider) {
-          joySizeSlider.addEventListener("input", () => {
-            if (!draftJoystickLayout || !draftJoystickLayout[selectedEditControlKey]) return;
-            const pct = Math.max(60, Math.min(160, Number(joySizeSlider.value) || 100));
-            draftJoystickLayout[selectedEditControlKey].scale = pct / 100;
-            const sizeVal = document.getElementById("joy-size-val");
-            if (sizeVal) sizeVal.textContent = pct + "%";
-            renderJoystickEditorHandles();
-          });
-        }
-        if (joyOpacitySlider) {
-          joyOpacitySlider.addEventListener("input", () => {
-            if (!draftJoystickLayout || !draftJoystickLayout[selectedEditControlKey]) return;
-            const pct = Math.max(10, Math.min(100, Number(joyOpacitySlider.value) || 84));
-            draftJoystickLayout[selectedEditControlKey].opacity = pct / 100;
-            const opVal = document.getElementById("joy-opacity-val");
-            if (opVal) opVal.textContent = pct + "%";
-            renderJoystickEditorHandles();
-          });
-        }
+      window.addEventListener("keyup", (e) => {
+        const k = e.key.toLowerCase();
+        if (k === "arrowleft" || k === "a") input.left = false;
+        if (k === "arrowright" || k === "d") input.right = false;
+      });
 
-        bindTouchControl("btn-left", "left");
-        bindTouchControl("btn-right", "right");
-        bindTouchControl("btn-hand", "hand", tryHandGrapple);
-        bindTouchControl("btn-item", "item", activateHeldItem);
-        bindTouchControl("btn-dash", "dash", tryDash);
-        bindTouchControl("btn-jump", "jump", tryJump);
+      window.addEventListener("blur", resetInputs);
+      window.addEventListener("resize", resizeCanvas);
 
-        window.addEventListener("keydown", (e) => {
-          if (document.activeElement && document.activeElement.tagName === "INPUT") return;
-          if (e.code === "ArrowLeft" || e.code === "KeyA") input.left = true;
-          if (e.code === "ArrowRight" || e.code === "KeyD") input.right = true;
-          if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") {
-            if (!input.jump) tryJump();
-            input.jump = true;
-          }
-          if (e.code === "ShiftLeft" || e.code === "ShiftRight" || e.code === "KeyE") {
-            if (!input.dash) tryDash();
-            input.dash = true;
-          }
-          if (e.code === "KeyF" || e.code === "Enter") {
-            if (!input.item) activateHeldItem();
-            input.item = true;
-          }
-          if (e.code === "KeyG") {
-            if (!input.hand) tryHandGrapple();
-            input.hand = true;
-          }
-        });
+      // 초기화 실행
+      resizeCanvas();
+      applyJoystickLayoutToPlayButtons(customJoystickLayout);
+      SoundEngine.updateButtons();
+      updateWideViewButtonsUI();
+      updateEconomyUI();
+      renderModeUI();
+      renderLobbySkinGrid();
+      renderFriendsLists();
+      updateLobbyEmbeddedRoomUI();
+      initMainPeer();
+      setScreen("LOBBY");
 
-        window.addEventListener("keyup", (e) => {
-          if (e.code === "ArrowLeft" || e.code === "KeyA") input.left = false;
-          if (e.code === "ArrowRight" || e.code === "KeyD") input.right = false;
-          if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") input.jump = false;
-          if (e.code === "ShiftLeft" || e.code === "ShiftRight" || e.code === "KeyE") input.dash = false;
-          if (e.code === "KeyF" || e.code === "Enter") input.item = false;
-          if (e.code === "KeyG") input.hand = false;
-        });
+      // 친구 온라인 상태 초록 점 실시간 유지를 위한 4초 주기 하트비트
+      setInterval(() => {
+        broadcastPresenceHeartbeat();
+      }, 4000);
 
-        window.addEventListener("beforeunload", () => {
-          if (currentScreen === "MATCHMAKING") {
-            sendMultiMsg({ type: "MM_LEAVE" });
-          } else if (activeRoomCode) {
-            broadcastRoomEvent({ type: "LEAVE_ROOM" });
-          }
-          stopMatchmakingLoop();
-          if (mainPeer) {
-            try { mainPeer.destroy(); } catch (e) {}
-          }
-          if (nickInvitePeer) {
-            try { nickInvitePeer.destroy(); } catch (e) {}
-          }
-        });
-
-        window.addEventListener("blur", resetInputs);
-        window.addEventListener("resize", resizeCanvas);
-
-        setScreen("LOBBY");
-        requestAnimationFrame(loop);
-      }
-
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initApp, { once: true });
-      } else {
-        initApp();
-      }
+      requestAnimationFrame(loop);
     })();
   </script>
 </body>
