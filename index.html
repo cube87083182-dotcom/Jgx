@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>PARKOUR RUSH 10P - 10인 멀티플레이어 파쿠르 레이스</title>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -42,6 +43,7 @@
     /* 비활성 오버레이가 절대 버튼 클릭을 가로채지 않도록 강제 숨김 */
     .hidden,
     #lobby-screen.hidden,
+    #matchmaking-overlay.hidden,
     #room-lobby-overlay.hidden,
     #lineup-overlay.hidden,
     #countdown-overlay.hidden,
@@ -182,7 +184,7 @@
       height: 13px;
       background: #ef4444;
       z-index: 1;
-      opacity: 0.9;
+      opacity: 0.92;
     }
 
     #marker-me {
@@ -194,7 +196,7 @@
       z-index: 5;
     }
 
-    /* 초대 알림 토스트 (친구 방 초대 수락 버튼 포함) */
+    /* 초대 알림 토스트 */
     #invite-toast {
       position: fixed;
       top: 14px;
@@ -202,7 +204,7 @@
       transform: translateX(-50%);
       z-index: 165;
       width: calc(100% - 24px);
-      max-width: 500px;
+      max-width: 540px;
       background: linear-gradient(135deg, #1e1b4b, #0f172a);
       border: 2px solid #38bdf8;
       border-radius: 14px;
@@ -218,7 +220,7 @@
       pointer-events: auto;
     }
 
-    /* 전체 화면 오버레이 (로비 / 결과) */
+    /* 전체 화면 오버레이 */
     .overlay-screen {
       position: fixed;
       inset: 0;
@@ -515,7 +517,7 @@
       box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
     }
 
-    /* 로비 가로 3열 매치 버튼: 랜덤 매치 | 훈련장 | AI 대전 */
+    /* 로비 가로 3열 매치 버튼: 10인 랜덤 매치 | 훈련장 | AI 대전 */
     .lobby-match-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -617,6 +619,31 @@
       outline: none;
     }
 
+    .net-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(16, 185, 129, 0.16);
+      border: 1px solid rgba(52, 211, 153, 0.55);
+      color: #6ee7b7;
+    }
+
+    .net-status-pill.connecting {
+      background: rgba(250, 204, 21, 0.15);
+      border-color: rgba(250, 204, 21, 0.55);
+      color: #fde047;
+    }
+
+    .net-status-pill.error {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(248, 113, 113, 0.6);
+      color: #fca5a5;
+    }
+
     /* 로비 & 방 대기실 친구 목록 바 */
     .friends-panel {
       background: #0f172a;
@@ -701,7 +728,8 @@
       min-height: 16px;
     }
 
-    /* 방 만들기 5x2 대기실 오버레이 (#room-lobby-overlay) */
+    /* 10인 랜덤 매치 & 방 만들기 5x2 대기실 오버레이 */
+    #matchmaking-overlay,
     #room-lobby-overlay {
       position: fixed;
       inset: 0;
@@ -713,6 +741,21 @@
       justify-content: center;
       padding: 12px;
       pointer-events: auto;
+    }
+
+    @keyframes pulseSearch {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.92); }
+    }
+
+    .searching-dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #38bdf8;
+      margin-right: 6px;
+      animation: pulseSearch 1.1s infinite ease-in-out;
     }
 
     /* 레이스 시작 전 5x2 출발 대열 소개 오버레이 */
@@ -959,7 +1002,7 @@
       transform: scale(0.95);
     }
 
-    /* 화면 하단 조작 버튼 (COUNTDOWN / RACING / TRAINING 시 항상 표시) */
+    /* 화면 하단 조작 버튼 */
     #touch-controls {
       position: fixed;
       inset: 0;
@@ -1309,20 +1352,45 @@
     <!-- 훈련장 전용 왼쪽 하단 '조이스틱 편집' 버튼 -->
     <button type="button" id="btn-training-joy-edit" class="hidden" data-action="open-joystick-editor">🕹️ 조이스틱 편집</button>
 
+    <!-- 🌐 10인 랜덤 매치 대기실 오버레이 (100% 실제 사람 전용 매칭 · AI 봇 절대 없음) -->
+    <div id="matchmaking-overlay" class="hidden" role="dialog" aria-label="10인 랜덤 매치 사람 전용 매칭 대기열">
+      <div class="lineup-container">
+        <div class="lineup-header">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px;">
+              <div class="lineup-title" id="mm-title">🌐 10인 랜덤 매치 · 사람 전용 매칭중</div>
+              <span style="background:rgba(56,189,248,0.2);border:1.5px solid #38bdf8;color:#bae6fd;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:900;">👥 100% 실제 사람 매칭 · AI 없음</span>
+              <span class="net-status-pill connecting" id="mm-net-badge">⏳ 네트워크 연결중...</span>
+            </div>
+            <div class="lineup-sub" id="mm-subtitle"><span class="searching-dot"></span>랜덤 매치를 누른 다른 플레이어 탐색 중 (1 / 10명) · 10명이 모이면 자동 출발!</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <button type="button" class="tool-btn btn-bot" id="btn-mm-start-now" data-action="start-mm-now">▶ 현재 인원으로 바로 출발</button>
+            <button type="button" class="hud-btn exit-btn" data-action="exit-lobby">✕ 매칭 취소</button>
+          </div>
+        </div>
+        <div class="lineup-grid" id="mm-grid"></div>
+        <div style="font-size:11px;color:#94a3b8;text-align:center;font-weight:700;">
+          💡 AI 봇은 절대 참가하지 않습니다. 다른 기기·창·탭에서 '🌐 10인 랜덤 매치'를 누른 플레이어들이 실시간으로 합류합니다.
+        </div>
+      </div>
+    </div>
+
     <!-- 방 만들기 / 방 참가 5x2 대기실 오버레이 (100% 사람 전용 방 · AI 입장 불가) -->
     <div id="room-lobby-overlay" class="hidden" role="dialog" aria-label="방 대기실 5x2 대열">
       <div class="lineup-container">
         <div class="lineup-header">
           <div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px;">
-              <div class="lineup-title" id="room-lobby-title">🏠 방 대기실 [CODE] · 5×2 대열</div>
+              <div class="lineup-title" id="room-lobby-title">🏠 방 대기실 [00000] · 5×2 대열</div>
               <span style="background:rgba(239,68,68,0.22);border:1.5px solid #f87171;color:#fecaca;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:900;">👥 사람 전용 방 · AI 입장 불가</span>
+              <span class="net-status-pill connecting" id="room-net-badge">⏳ P2P 방 연결중...</span>
             </div>
-            <div class="lineup-sub" id="room-lobby-subtitle">현재 입장 인원: 1 / 10명 · 아래 친구 목록에서 바로 초대할 수 있습니다</div>
+            <div class="lineup-sub" id="room-lobby-subtitle">현재 입장 인원: 1 / 10명 · 친구에게 5자리 방 코드를 알려주세요!</div>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <button type="button" class="tool-btn btn-invite-room" data-action="invite-room">📋 방 코드 복사</button>
-            <button type="button" class="tool-btn btn-bot" data-action="start-room-race">▶ 레이스 시작</button>
+            <button type="button" class="tool-btn btn-bot" id="btn-start-room-race" data-action="start-room-race">▶ 레이스 시작</button>
             <button type="button" class="hud-btn exit-btn" data-action="exit-lobby">✕ 나가기</button>
           </div>
         </div>
@@ -1363,7 +1431,10 @@
       <button type="button" id="btn-wide-countdown" data-action="toggle-wide">🔭 시야 넓게</button>
     </div>
 
-    <!-- 화면 하단 조작 버튼 (COUNTDOWN / RACING / TRAINING 시 항상 표시) -->
+    <!-- 훈련장 전용 왼쪽 하단 '조이스틱 편집' 버튼 -->
+    <button type="button" id="btn-training-joy-edit" class="hidden" data-action="open-joystick-editor">🕹️ 조이스틱 편집</button>
+
+    <!-- 화면 하단 조작 버튼 -->
     <div id="touch-controls" class="hidden">
       <button type="button" class="touch-btn" id="btn-left" data-ctrl-key="left">◀</button>
       <button type="button" class="touch-btn" id="btn-right" data-ctrl-key="right">▶</button>
@@ -1414,7 +1485,7 @@
     <div id="lobby-screen" class="overlay-screen">
       <div class="panel">
         <div class="title">PARKOUR RUSH 10P</div>
-        <div class="subtitle">스피드전 · 아이템전 · 1분전 · 10초 팔뻗어오르기 · 5×2 출발 라인업 · 훈련장 · 친구 초대</div>
+        <div class="subtitle">스피드전 · 아이템전 · 1분전 · 10인 사람 랜덤매치 · AI 대전 · 10초 팔뻗어오르기 · 훈련장</div>
 
         <!-- 프로필 & 골드 상단 바 -->
         <div class="profile-bar">
@@ -1425,6 +1496,7 @@
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <span class="gold-badge" id="lobby-gold">💰 100G</span>
             <span class="selected-pill" id="lobby-skin-pill">🎨 기본 러너</span>
+            <span class="net-status-pill connecting" id="lobby-net-badge">⏳ P2P 준비중</span>
             <button type="button" id="btn-sound-lobby" class="hud-btn" data-action="toggle-sound">🔊 소리 ON</button>
           </div>
         </div>
@@ -1460,22 +1532,22 @@
           <div class="skin-grid-5x2" id="skin-grid"></div>
         </div>
 
-        <!-- 가로 3열 매치 버튼: 랜덤 매치(왼쪽) -> 훈련장(가운데) -> AI 대전(오른쪽) -->
+        <!-- 가로 3열 매치 버튼: 10인 랜덤 매치(사람전용) -> 훈련장(가운데) -> AI 대전(오른쪽) -->
         <div class="lobby-match-row">
-          <button type="button" class="main-btn btn-online" id="btn-random-match" data-action="random-match">🌐 랜덤 매치</button>
+          <button type="button" class="main-btn btn-online" id="btn-random-match" data-action="random-match">🌐 10인 랜덤 매치</button>
           <button type="button" class="main-btn btn-training" id="btn-training-ground" data-action="start-training">🏋️ 훈련장</button>
           <button type="button" class="main-btn btn-bot" id="btn-bot-match" data-action="start-bot">🤖 AI 대전</button>
         </div>
 
-        <!-- 방 만들기 / 방 참가 바 -->
+        <!-- 방 만들기 / 방 참가 바 (5자리 팀 코드 · 다른 기기/친구 폰 연결 지원) -->
         <div class="room-tools-bar">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <button type="button" class="tool-btn btn-create-room" id="btn-create-room" data-action="create-room">🏠 방 만들기</button>
-            <input type="text" id="room-code-input" maxlength="6" placeholder="코드6자" autocomplete="off" />
+            <input type="text" id="room-code-input" maxlength="6" placeholder="코드5자" autocomplete="off" />
             <button type="button" class="tool-btn btn-join-room" id="btn-join-room" data-action="join-room">🔑 방 참가</button>
             <button type="button" class="tool-btn btn-invite-room" id="btn-lobby-invite" data-action="invite-room">초대</button>
           </div>
-          <span style="font-size:11px;color:#94a3b8;font-weight:700;">💡 훈련장 왼쪽 하단에서 조이스틱 위치/크기/투명도 편집 가능</span>
+          <span style="font-size:11px;color:#94a3b8;font-weight:700;">🌐 다른 기기/친구 폰과 팀 코드 연결 지원 · AI는 'AI 대전'에서만 등장</span>
         </div>
 
         <!-- 로비 친구 목록 & 방으로 초대 -->
@@ -1487,7 +1559,7 @@
           <div class="friends-list-row" id="lobby-friends-list"></div>
         </div>
 
-        <div id="room-status-line">원하는 모드와 스킨을 고른 뒤 랜덤 매치, 훈련장, AI 대전 또는 방 만들기를 눌러보세요!</div>
+        <div id="room-status-line">원하는 모드와 스킨을 고른 뒤 랜덤 매치(사람 10인), 훈련장, AI 대전 또는 방 만들기를 눌러보세요!</div>
       </div>
     </div>
 
@@ -1583,7 +1655,7 @@
       }
 
       // ==========================================
-      // 2. Web Audio API 효과음 엔진 (외부 URL 미사용)
+      // 2. Web Audio API 효과음 엔진 (외부 음원 미사용)
       // ==========================================
       const SoundEngine = (() => {
         let audioCtx = null;
@@ -1682,11 +1754,13 @@
       // ==========================================
       // 3. 핵심 상태 변수 및 단일 오버레이 전환 setScreen(screenName)
       // ==========================================
-      let currentScreen = "LOBBY"; // LOBBY | ROOM_LOBBY | LINEUP | COUNTDOWN | RACING | TRAINING | JOYSTICK_EDITOR | RESULT
+      let currentScreen = "LOBBY"; // LOBBY | MATCHMAKING | ROOM_LOBBY | LINEUP | COUNTDOWN | RACING | TRAINING | JOYSTICK_EDITOR | RESULT
       let activeRoomCode = "";
       let isRoomHost = false;
       let lastLaunchKind = "BOT"; // RANDOM | BOT | TRAINING | ROOM
       let roomParticipants = [];
+      let matchmakingQueue = [];
+      let matchmakingTimer = null;
       let pendingInviteRoomCode = "";
       const MY_CLIENT_ID = "HUMAN_" + Math.random().toString(36).slice(2, 10).toUpperCase();
 
@@ -1695,6 +1769,7 @@
 
         const screenOverlayMap = {
           LOBBY: "lobby-screen",
+          MATCHMAKING: "matchmaking-overlay",
           ROOM_LOBBY: "room-lobby-overlay",
           LINEUP: "lineup-overlay",
           COUNTDOWN: "countdown-overlay",
@@ -2134,17 +2209,12 @@
         if (codeInput) codeInput.value = activeRoomCode;
         copyTextFallback(activeRoomCode);
 
-        if (roomChannel) {
-          try {
-            roomChannel.postMessage({
-              type: "FRIEND_INVITE",
-              roomCode: activeRoomCode,
-              senderId: MY_CLIENT_ID,
-              fromName: myNickname,
-              targetName: cleanFriend
-            });
-          } catch (e) {}
-        }
+        sendMultiMsg({
+          type: "FRIEND_INVITE",
+          roomCode: activeRoomCode,
+          fromName: myNickname,
+          targetName: cleanFriend
+        });
 
         SoundEngine.playItemPickup();
         showInviteToast(`📨 [${cleanFriend}]님을 사람 전용 방 [${activeRoomCode}]으로 초대했습니다! (코드 복사됨)`, false);
@@ -2201,7 +2271,7 @@
       }
 
       // ==========================================
-      // 6. 닉네임, 초대 토스트 & 100% 사람 전용 방 (BroadcastChannel)
+      // 6. 닉네임, PeerJS WebRTC + BroadcastChannel 실시간 멀티플레이어 (사람 전용)
       // ==========================================
       const DEFAULT_NICK = "러너" + Math.floor(100 + Math.random() * 900);
       let myNickname = (safeGetStorage("parkour_nickname", "") || "").trim() || DEFAULT_NICK;
@@ -2213,13 +2283,20 @@
         return val || myNickname || DEFAULT_NICK;
       }
 
-      function generateRoomCode(len = 6) {
-        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-        let code = "";
-        for (let i = 0; i < len; i++) {
-          code += chars[Math.floor(Math.random() * chars.length)];
-        }
-        return code;
+      function generateFiveDigitRoomCode() {
+        return String(Math.floor(10000 + Math.random() * 90000));
+      }
+
+      function normalizeRoomCode(raw) {
+        return String(raw || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+      }
+
+      function toRoomPeerId(code) {
+        return "pr10p-rm-" + normalizeRoomCode(code).toLowerCase();
+      }
+
+      function toMmSlotPeerId(slotIndex) {
+        return "pr10p-mm-s" + slotIndex;
       }
 
       let inviteToastTimer = null;
@@ -2237,7 +2314,7 @@
         if (inviteToastTimer) clearTimeout(inviteToastTimer);
         inviteToastTimer = setTimeout(() => {
           toastEl.classList.add("hidden");
-        }, 6500);
+        }, 7000);
       }
 
       function hideInviteToast() {
@@ -2263,6 +2340,20 @@
         } catch (e) {}
       }
 
+      function setNetBadge(state, text) {
+        ["lobby-net-badge", "room-net-badge", "mm-net-badge"].forEach(id => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.className = "net-status-pill" + (state === "connecting" ? " connecting" : (state === "error" ? " error" : ""));
+          el.textContent = text;
+        });
+      }
+
+      function setLobbyStatus(msg) {
+        const el = document.getElementById("room-status-line");
+        if (el) el.textContent = msg;
+      }
+
       let roomChannel = null;
       try {
         if (typeof BroadcastChannel !== "undefined") {
@@ -2272,15 +2363,193 @@
         roomChannel = null;
       }
 
-      function broadcastRoomEvent(payload) {
-        if (!roomChannel || !activeRoomCode) return;
+      // PeerJS P2P 연결 관리
+      let mainPeer = null;
+      let peerReady = false;
+      const peerConns = new Map(); // peerId -> DataConnection
+      let mmLobbyPeer = null;
+      const mmLobbyConns = new Map();
+      let mmOutboundConns = new Map();
+      let lastPosSyncSentAt = 0;
+
+      function attachDataConn(conn) {
+        if (!conn) return;
+        const remoteId = conn.peer;
+        peerConns.set(remoteId, conn);
+
+        conn.on("open", () => {
+          peerConns.set(remoteId, conn);
+          if (currentScreen === "ROOM_LOBBY" && activeRoomCode) {
+            if (isRoomHost) {
+              conn.send({
+                type: "ROOM_SYNC",
+                roomCode: activeRoomCode,
+                senderId: MY_CLIENT_ID,
+                members: roomParticipants,
+                gameMode: selectedGameMode
+              });
+            } else {
+              conn.send({
+                type: "JOIN_REQUEST",
+                roomCode: activeRoomCode,
+                senderId: MY_CLIENT_ID,
+                member: {
+                  id: MY_CLIENT_ID,
+                  name: myNickname,
+                  skinId: selectedSkinId,
+                  isHost: false,
+                  isAI: false
+                }
+              });
+            }
+          } else if (currentScreen === "MATCHMAKING") {
+            conn.send({
+              type: "MM_PING",
+              senderId: MY_CLIENT_ID,
+              member: {
+                id: MY_CLIENT_ID,
+                name: myNickname,
+                skinId: selectedSkinId,
+                isAI: false,
+                joinedAt: Date.now()
+              },
+              gameMode: selectedGameMode
+            });
+          }
+        });
+
+        conn.on("data", (data) => {
+          handleIncomingNetworkMsg(data);
+        });
+
+        conn.on("close", () => {
+          peerConns.delete(remoteId);
+        });
+
+        conn.on("error", () => {
+          peerConns.delete(remoteId);
+        });
+      }
+
+      function connectToPeerId(targetPeerId) {
+        if (!mainPeer || !peerReady || !targetPeerId || targetPeerId === mainPeer.id) return;
+        const existing = peerConns.get(targetPeerId);
+        if (existing && existing.open) return;
         try {
-          roomChannel.postMessage({
-            roomCode: activeRoomCode,
-            senderId: MY_CLIENT_ID,
-            ...payload
-          });
+          const conn = mainPeer.connect(targetPeerId, { reliable: true });
+          if (conn) attachDataConn(conn);
         } catch (e) {}
+      }
+
+      function initMainPeer(customId = null) {
+        if (typeof window.Peer === "undefined") {
+          setNetBadge("connecting", "⚡ 로컬/탭 연결 모드");
+          return;
+        }
+        try {
+          if (mainPeer) {
+            try { mainPeer.destroy(); } catch (e) {}
+            mainPeer = null;
+          }
+          peerReady = false;
+          setNetBadge("connecting", "⏳ P2P 서버 연결중...");
+
+          const peerId = customId || ("pr10p-u-" + MY_CLIENT_ID.toLowerCase() + "-" + Math.random().toString(36).slice(2, 6));
+          mainPeer = new window.Peer(peerId, {
+            debug: 0,
+            config: {
+              iceServers: [
+                { urls: "stun:stun.l.google.com:19302" },
+                { urls: "stun:stun1.l.google.com:19302" }
+              ]
+            }
+          });
+
+          mainPeer.on("open", () => {
+            peerReady = true;
+            setNetBadge("ok", "🟢 온라인 P2P 연결됨 (다른 기기 지원)");
+          });
+
+          mainPeer.on("connection", (conn) => {
+            attachDataConn(conn);
+          });
+
+          mainPeer.on("error", (err) => {
+            const errType = err && err.type ? err.type : "";
+            if (errType === "id-taken") {
+              setNetBadge("error", "⚠️ 이미 사용 중인 방 코드입니다");
+              setLobbyStatus("⚠️ 같은 코드의 방이 이미 열려 있습니다. 새 방을 만들거나 다른 코드를 입력하세요.");
+              return;
+            }
+            if (errType === "peer-unavailable") {
+              if (currentScreen === "ROOM_LOBBY" && !isRoomHost) {
+                setNetBadge("connecting", "🔍 방 코드 호스트 찾는 중...");
+              }
+              return;
+            }
+            setNetBadge("connecting", "⚡ 재연결 대기중");
+          });
+
+          mainPeer.on("disconnected", () => {
+            peerReady = false;
+            try {
+              if (mainPeer && !mainPeer.destroyed) mainPeer.reconnect();
+            } catch (e) {}
+          });
+        } catch (e) {
+          setNetBadge("connecting", "⚡ 로컬 연결 모드");
+        }
+      }
+
+      function sendMultiMsg(payload) {
+        const msg = {
+          senderId: MY_CLIENT_ID,
+          ...payload
+        };
+
+        if (roomChannel) {
+          try {
+            roomChannel.postMessage(msg);
+          } catch (e) {}
+        }
+
+        peerConns.forEach((conn, key) => {
+          try {
+            if (conn && conn.open) {
+              conn.send(msg);
+            }
+          } catch (e) {
+            peerConns.delete(key);
+          }
+        });
+
+        mmLobbyConns.forEach((conn, key) => {
+          try {
+            if (conn && conn.open) {
+              conn.send(msg);
+            }
+          } catch (e) {
+            mmLobbyConns.delete(key);
+          }
+        });
+
+        mmOutboundConns.forEach((conn, key) => {
+          try {
+            if (conn && conn.open) {
+              conn.send(msg);
+            }
+          } catch (e) {
+            mmOutboundConns.delete(key);
+          }
+        });
+      }
+
+      function broadcastRoomEvent(payload) {
+        if (!activeRoomCode) return;
+        sendMultiMsg({
+          roomCode: activeRoomCode,
+          ...payload
+        });
       }
 
       function sanitizeHumanRoomMembers(list) {
@@ -2296,13 +2565,218 @@
             skinId: SKINS[m.skinId] ? Number(m.skinId) : 0,
             isMe: m.id === MY_CLIENT_ID,
             isHost: !!m.isHost,
-            isAI: false
+            isAI: false,
+            joinedAt: Number(m.joinedAt) || 0
           });
           if (clean.length >= 10) break;
         }
         return clean;
       }
 
+      // --- 10인 랜덤 매치 (100% 실제 사람 전용 매칭 큐 · AI 봇 절대 불가) ---
+      function stopMatchmakingLoop() {
+        if (matchmakingTimer) {
+          clearInterval(matchmakingTimer);
+          matchmakingTimer = null;
+        }
+        if (mmLobbyPeer) {
+          try { mmLobbyPeer.destroy(); } catch (e) {}
+          mmLobbyPeer = null;
+        }
+        mmLobbyConns.clear();
+        mmOutboundConns.clear();
+      }
+
+      function renderMatchmakingQueueGrid() {
+        const subEl = document.getElementById("mm-subtitle");
+        const gridEl = document.getElementById("mm-grid");
+        matchmakingQueue = sanitizeHumanRoomMembers(matchmakingQueue);
+
+        if (subEl) {
+          const modeTitle = GAME_MODES[selectedGameMode]?.label || "⚡ 스피드 전";
+          subEl.innerHTML = `<span class="searching-dot"></span>랜덤 매치를 누른 다른 플레이어 탐색 중 (${matchmakingQueue.length} / 10명) · 모드: ${modeTitle}`;
+        }
+        if (!gridEl) return;
+
+        gridEl.innerHTML = "";
+        for (let i = 0; i < 10; i++) {
+          const p = matchmakingQueue[i];
+          const card = document.createElement("div");
+
+          if (!p) {
+            card.className = "lineup-card empty-slot";
+            card.innerHTML = `
+              <div class="lineup-slot-row">
+                <span style="color:#64748b;">#${String(i + 1).padStart(2, "0")}</span>
+                <span class="lineup-role-badge bot">사람 대기중</span>
+              </div>
+              <div class="lineup-skin-img-wrap" style="border-style:dashed;border-color:#38bdf8;">
+                <span style="font-size:18px;color:#38bdf8;">🔍</span>
+              </div>
+              <div class="lineup-nick" style="color:#94a3b8;font-size:10.5px;">플레이어 찾는 중...</div>
+              <div class="lineup-skin-name">AI 입장 불가</div>
+            `;
+            gridEl.appendChild(card);
+            continue;
+          }
+
+          const skin = SKINS[p.skinId] || SKINS[0];
+          const imgUrl = getSkinPortraitDataUrl(p.skinId);
+          card.className = "lineup-card " + (p.isMe ? "me" : "joined");
+          const badgeText = p.isMe ? "ME (매칭됨)" : "PLAYER (매칭됨)";
+          card.innerHTML = `
+            <div class="lineup-slot-row">
+              <span style="color:#94a3b8;">#${String(i + 1).padStart(2, "0")}</span>
+              <span class="lineup-role-badge ${p.isMe ? "me" : "joined"}">${badgeText}</span>
+            </div>
+            <div class="lineup-skin-img-wrap" style="border-color:${skin.band};">
+              ${imgUrl ? `<img class="lineup-skin-img" src="${imgUrl}" alt="${skin.name}" />` : `<div style="width:28px;height:28px;background:${skin.body};border-radius:6px;"></div>`}
+            </div>
+            <div class="lineup-nick">${p.isMe ? "⭐ " + p.name : "👤 " + p.name}</div>
+            <div class="lineup-skin-name">${skin.name}</div>
+          `;
+          gridEl.appendChild(card);
+        }
+      }
+
+      function startMatchmakingRaceNow() {
+        const members = sanitizeHumanRoomMembers(matchmakingQueue);
+        const peers = members.filter(p => !p.isMe);
+        const sharedMapIdx = Math.floor(Math.random() * MAP_THEMES.length);
+        const sharedSeed = Math.floor(Math.random() * 999999);
+
+        sendMultiMsg({
+          type: "MM_START",
+          members,
+          gameMode: selectedGameMode,
+          mapIdx: sharedMapIdx,
+          seed: sharedSeed
+        });
+
+        stopMatchmakingLoop();
+        lastLaunchKind = "RANDOM";
+        launch10PRace(`10인 사람 랜덤 매치 (${members.length}명)`, peers, {
+          humanOnlyRoom: true,
+          mapIdx: sharedMapIdx,
+          seed: sharedSeed
+        });
+      }
+
+      function claimMatchmakingSlotPeer() {
+        if (typeof window.Peer === "undefined" || mmLobbyPeer) return;
+        for (let slot = 0; slot < 10; slot++) {
+          const candidateId = toMmSlotPeerId(slot);
+          try {
+            const p = new window.Peer(candidateId, {
+              debug: 0,
+              config: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] }
+            });
+            mmLobbyPeer = p;
+            p.on("connection", (conn) => {
+              mmLobbyConns.set(conn.peer, conn);
+              conn.on("open", () => {
+                conn.send({
+                  type: "MM_PING",
+                  senderId: MY_CLIENT_ID,
+                  member: {
+                    id: MY_CLIENT_ID,
+                    name: myNickname,
+                    skinId: selectedSkinId,
+                    isAI: false,
+                    joinedAt: Date.now()
+                  },
+                  gameMode: selectedGameMode
+                });
+              });
+              conn.on("data", (d) => handleIncomingNetworkMsg(d));
+              conn.on("close", () => mmLobbyConns.delete(conn.peer));
+            });
+            p.on("error", (err) => {
+              if (err && err.type === "id-taken" && mmLobbyPeer === p) {
+                try { p.destroy(); } catch (e) {}
+                mmLobbyPeer = null;
+              }
+            });
+            break;
+          } catch (e) {}
+        }
+      }
+
+      function openRandomMatchmakingQueue() {
+        clearTimers();
+        stopMatchmakingLoop();
+        myNickname = getSanitizedNickname();
+        safeSetStorage("parkour_nickname", myNickname);
+
+        const meObj = {
+          id: MY_CLIENT_ID,
+          name: myNickname,
+          skinId: selectedSkinId,
+          isMe: true,
+          isHost: false,
+          isAI: false,
+          joinedAt: Date.now()
+        };
+
+        matchmakingQueue = [meObj];
+        renderMatchmakingQueueGrid();
+        setScreen("MATCHMAKING");
+        claimMatchmakingSlotPeer();
+
+        const pollMatchmaking = () => {
+          if (currentScreen !== "MATCHMAKING") {
+            stopMatchmakingLoop();
+            return;
+          }
+          sendMultiMsg({
+            type: "MM_PING",
+            member: {
+              id: MY_CLIENT_ID,
+              name: myNickname,
+              skinId: selectedSkinId,
+              isAI: false,
+              joinedAt: meObj.joinedAt
+            },
+            gameMode: selectedGameMode
+          });
+
+          if (mainPeer && peerReady && typeof window.Peer !== "undefined") {
+            for (let slot = 0; slot < 10; slot++) {
+              const targetId = toMmSlotPeerId(slot);
+              if (mmLobbyPeer && mmLobbyPeer.id === targetId) continue;
+              if (mmOutboundConns.has(targetId) && mmOutboundConns.get(targetId).open) continue;
+              try {
+                const c = mainPeer.connect(targetId, { reliable: true });
+                if (c) {
+                  mmOutboundConns.set(targetId, c);
+                  c.on("open", () => {
+                    c.send({
+                      type: "MM_PING",
+                      senderId: MY_CLIENT_ID,
+                      member: {
+                        id: MY_CLIENT_ID,
+                        name: myNickname,
+                        skinId: selectedSkinId,
+                        isAI: false,
+                        joinedAt: meObj.joinedAt
+                      },
+                      gameMode: selectedGameMode
+                    });
+                  });
+                  c.on("data", (d) => handleIncomingNetworkMsg(d));
+                  c.on("close", () => mmOutboundConns.delete(targetId));
+                  c.on("error", () => mmOutboundConns.delete(targetId));
+                }
+              } catch (e) {}
+            }
+          }
+        };
+
+        pollMatchmaking();
+        matchmakingTimer = setInterval(pollMatchmaking, 1100);
+      }
+
+      // --- 방 만들기 / 방 참가 (5자리 코드 · 100% 사람 전용 방) ---
       function renderRoomLobbyGrid() {
         const titleEl = document.getElementById("room-lobby-title");
         const subEl = document.getElementById("room-lobby-subtitle");
@@ -2314,7 +2788,8 @@
         }
         if (subEl) {
           const modeTitle = GAME_MODES[selectedGameMode]?.label || "⚡ 스피드 전";
-          subEl.textContent = `현재 입장 인원: ${roomParticipants.length} / 10명 (사람 전용) · 모드: ${modeTitle}`;
+          const roleHint = isRoomHost ? "방장 (▶ 레이스 시작 가능)" : "게스트 (방장 시작 대기중)";
+          subEl.textContent = `현재 입장 인원: ${roomParticipants.length} / 10명 · ${roleHint} · 모드: ${modeTitle}`;
         }
         if (!gridEl) return;
 
@@ -2362,11 +2837,12 @@
 
       function openCreateRoomLobby() {
         clearTimers();
+        stopMatchmakingLoop();
         myNickname = getSanitizedNickname();
         safeSetStorage("parkour_nickname", myNickname);
 
         isRoomHost = true;
-        activeRoomCode = generateRoomCode(6);
+        activeRoomCode = generateFiveDigitRoomCode();
         const codeInput = document.getElementById("room-code-input");
         if (codeInput) codeInput.value = activeRoomCode;
 
@@ -2374,18 +2850,23 @@
           { id: MY_CLIENT_ID, name: myNickname, skinId: selectedSkinId, isMe: true, isHost: true, isAI: false }
         ]);
 
+        initMainPeer(toRoomPeerId(activeRoomCode));
         renderRoomLobbyGrid();
         setScreen("ROOM_LOBBY");
         broadcastRoomEvent({ type: "ROOM_SYNC", members: roomParticipants, gameMode: selectedGameMode });
       }
 
       function joinCustomHumanRoom(code) {
+        const cleanCode = normalizeRoomCode(code);
+        if (cleanCode.length < 4) return;
+
         clearTimers();
+        stopMatchmakingLoop();
         myNickname = getSanitizedNickname();
         safeSetStorage("parkour_nickname", myNickname);
 
         isRoomHost = false;
-        activeRoomCode = code;
+        activeRoomCode = cleanCode;
         const codeInput = document.getElementById("room-code-input");
         if (codeInput) codeInput.value = activeRoomCode;
 
@@ -2393,76 +2874,203 @@
           { id: MY_CLIENT_ID, name: myNickname, skinId: selectedSkinId, isMe: true, isHost: false, isAI: false }
         ]);
 
+        if (!mainPeer || mainPeer.destroyed) {
+          initMainPeer();
+        }
+        setNetBadge("connecting", `🔍 방 [${activeRoomCode}] 연결중...`);
         renderRoomLobbyGrid();
         setScreen("ROOM_LOBBY");
-        broadcastRoomEvent({
-          type: "JOIN_REQUEST",
-          member: { id: MY_CLIENT_ID, name: myNickname, skinId: selectedSkinId, isHost: false, isAI: false }
-        });
+
+        const hostPeerId = toRoomPeerId(activeRoomCode);
+        let attempts = 0;
+        const tryConnectHost = () => {
+          if (currentScreen !== "ROOM_LOBBY" || isRoomHost || activeRoomCode !== cleanCode) return;
+          const existing = peerConns.get(hostPeerId);
+          if (existing && existing.open) {
+            existing.send({
+              type: "JOIN_REQUEST",
+              roomCode: activeRoomCode,
+              senderId: MY_CLIENT_ID,
+              member: { id: MY_CLIENT_ID, name: myNickname, skinId: selectedSkinId, isHost: false, isAI: false }
+            });
+            return;
+          }
+          if (mainPeer && peerReady) {
+            connectToPeerId(hostPeerId);
+          }
+          broadcastRoomEvent({
+            type: "JOIN_REQUEST",
+            member: { id: MY_CLIENT_ID, name: myNickname, skinId: selectedSkinId, isHost: false, isAI: false }
+          });
+          attempts++;
+          if (attempts < 12) {
+            setTimeout(tryConnectHost, 800);
+          } else if (roomParticipants.length <= 1) {
+            setNetBadge("error", `⚠️ 방 [${activeRoomCode}]을 찾을 수 없음`);
+            showInviteToast(`⚠️ 방 [${activeRoomCode}]에 연결되지 않았습니다. 방장이 방을 만들었는지·코드가 맞는지 확인해 주세요!`, false);
+          }
+        };
+
+        setTimeout(tryConnectHost, 200);
+      }
+
+      function handleIncomingNetworkMsg(msg) {
+        if (!msg || msg.senderId === MY_CLIENT_ID) return;
+
+        // 1) 10인 랜덤 매치 (100% 사람 전용 매칭 동기화)
+        if (msg.type === "MM_PING" && msg.member && !msg.member.isAI) {
+          if (currentScreen === "MATCHMAKING") {
+            const prevCount = matchmakingQueue.length;
+            const merged = sanitizeHumanRoomMembers([
+              ...matchmakingQueue,
+              { ...msg.member, isAI: false }
+            ]);
+            matchmakingQueue = merged;
+            if (merged.length > prevCount) {
+              SoundEngine.playItemPickup();
+              sendMultiMsg({
+                type: "MM_PING",
+                member: {
+                  id: MY_CLIENT_ID,
+                  name: myNickname,
+                  skinId: selectedSkinId,
+                  isAI: false
+                },
+                gameMode: selectedGameMode
+              });
+            }
+            renderMatchmakingQueueGrid();
+
+            if (matchmakingQueue.length >= 10) {
+              const leaderId = matchmakingQueue.map(m => m.id).sort()[0];
+              if (leaderId === MY_CLIENT_ID) {
+                startMatchmakingRaceNow();
+              }
+            }
+          }
+          return;
+        }
+
+        if (msg.type === "MM_LEAVE" && msg.senderId) {
+          if (currentScreen === "MATCHMAKING") {
+            matchmakingQueue = sanitizeHumanRoomMembers(
+              matchmakingQueue.filter(m => m.id !== msg.senderId)
+            );
+            renderMatchmakingQueueGrid();
+          }
+          return;
+        }
+
+        if (msg.type === "MM_START" && Array.isArray(msg.members)) {
+          if (currentScreen === "MATCHMAKING") {
+            stopMatchmakingLoop();
+            if (msg.gameMode && GAME_MODES[msg.gameMode]) {
+              selectRaceMode(msg.gameMode);
+            }
+            const allHumans = sanitizeHumanRoomMembers(msg.members);
+            const peers = allHumans.filter(p => !p.isMe);
+            lastLaunchKind = "RANDOM";
+            launch10PRace(`10인 사람 랜덤 매치 (${allHumans.length}명)`, peers, {
+              humanOnlyRoom: true,
+              mapIdx: msg.mapIdx,
+              seed: msg.seed
+            });
+          }
+          return;
+        }
+
+        // 2) 친구 방 초대 알림
+        if (msg.type === "FRIEND_INVITE" && msg.roomCode) {
+          SoundEngine.playItemPickup();
+          showInviteToast(
+            `📨 [${msg.fromName || "친구"}]님이 사람 전용 방 [${msg.roomCode}]으로 초대했습니다!`,
+            true,
+            msg.roomCode
+          );
+          return;
+        }
+
+        // 3) 레이스 중 실시간 플레이어 상태 동기화
+        if (msg.type === "RACE_POS" && msg.playerId) {
+          if (currentScreen === "RACING" || currentScreen === "COUNTDOWN") {
+            const target = racers.find(r => r.id === msg.playerId);
+            if (target) {
+              if (typeof msg.x === "number") target.x = msg.x;
+              if (typeof msg.y === "number") target.y = msg.y;
+              if (typeof msg.vx === "number") target.vx = msg.vx;
+              if (typeof msg.vy === "number") target.vy = msg.vy;
+              if (typeof msg.facing === "number") target.facing = msg.facing;
+              if (typeof msg.grounded === "boolean") target.grounded = msg.grounded;
+              if (typeof msg.walkPhase === "number") target.walkPhase = msg.walkPhase;
+              if (typeof msg.skinId === "number" && SKINS[msg.skinId]) target.skinId = msg.skinId;
+              if (typeof msg.name === "string" && msg.name.trim()) target.name = msg.name.trim().slice(0, 10);
+              if (msg.finished) {
+                target.finished = true;
+                target.finishTime = msg.finishTime || elapsedTime;
+              }
+              target.progress = getProgress(target.x);
+              const dot = document.getElementById("marker-opp-" + target.id);
+              if (dot) dot.style.left = target.progress + "%";
+            }
+          }
+          return;
+        }
+
+        // 4) 사람 전용 커스텀 방 동기화
+        if (!activeRoomCode || normalizeRoomCode(msg.roomCode) !== normalizeRoomCode(activeRoomCode)) return;
+
+        if (msg.type === "JOIN_REQUEST" && msg.member && !msg.member.isAI) {
+          if (currentScreen === "ROOM_LOBBY") {
+            const next = sanitizeHumanRoomMembers([...roomParticipants, { ...msg.member, isAI: false }]);
+            if (next.length !== roomParticipants.length) {
+              SoundEngine.playItemPickup();
+              setNetBadge("ok", `🟢 ${next.length}명 연결됨`);
+            }
+            roomParticipants = next;
+            renderRoomLobbyGrid();
+            if (isRoomHost) {
+              broadcastRoomEvent({ type: "ROOM_SYNC", members: roomParticipants, gameMode: selectedGameMode });
+            }
+          }
+        } else if (msg.type === "ROOM_SYNC" && Array.isArray(msg.members)) {
+          if (currentScreen === "ROOM_LOBBY") {
+            const merged = sanitizeHumanRoomMembers([
+              ...msg.members,
+              { id: MY_CLIENT_ID, name: myNickname, skinId: selectedSkinId, isMe: true, isHost: isRoomHost, isAI: false }
+            ]);
+            roomParticipants = merged;
+            setNetBadge("ok", `🟢 방 [${activeRoomCode}] 연결됨 (${merged.length}명)`);
+            if (msg.gameMode && GAME_MODES[msg.gameMode]) {
+              selectRaceMode(msg.gameMode);
+            }
+            renderRoomLobbyGrid();
+          }
+        } else if (msg.type === "START_RACE") {
+          if (currentScreen === "ROOM_LOBBY") {
+            if (msg.gameMode && GAME_MODES[msg.gameMode]) {
+              selectRaceMode(msg.gameMode);
+            }
+            const humanPeers = sanitizeHumanRoomMembers(msg.members || roomParticipants).filter(p => !p.isMe);
+            lastLaunchKind = "ROOM";
+            launch10PRace(`사람 전용 방 [${activeRoomCode}]`, humanPeers, {
+              humanOnlyRoom: true,
+              mapIdx: msg.mapIdx,
+              seed: msg.seed
+            });
+          }
+        } else if (msg.type === "LEAVE_ROOM") {
+          if (currentScreen === "ROOM_LOBBY") {
+            roomParticipants = sanitizeHumanRoomMembers(
+              roomParticipants.filter(p => p.id !== msg.senderId)
+            );
+            renderRoomLobbyGrid();
+          }
+        }
       }
 
       if (roomChannel) {
         roomChannel.onmessage = (event) => {
-          const msg = event && event.data;
-          if (!msg || msg.senderId === MY_CLIENT_ID) return;
-
-          if (msg.type === "FRIEND_INVITE" && msg.roomCode) {
-            SoundEngine.playItemPickup();
-            showInviteToast(
-              `📨 [${msg.fromName || "친구"}]님이 사람 전용 방 [${msg.roomCode}]으로 초대했습니다!`,
-              true,
-              msg.roomCode
-            );
-            return;
-          }
-
-          if (!activeRoomCode || msg.roomCode !== activeRoomCode) return;
-
-          if (msg.type === "JOIN_REQUEST" && msg.member && !msg.member.isAI) {
-            if (currentScreen === "ROOM_LOBBY") {
-              const next = sanitizeHumanRoomMembers([...roomParticipants, { ...msg.member, isAI: false }]);
-              if (next.length !== roomParticipants.length) {
-                SoundEngine.playItemPickup();
-              }
-              roomParticipants = next;
-              renderRoomLobbyGrid();
-              if (isRoomHost) {
-                broadcastRoomEvent({ type: "ROOM_SYNC", members: roomParticipants, gameMode: selectedGameMode });
-              }
-            }
-          } else if (msg.type === "ROOM_SYNC" && Array.isArray(msg.members)) {
-            if (currentScreen === "ROOM_LOBBY") {
-              const merged = sanitizeHumanRoomMembers([
-                ...msg.members,
-                { id: MY_CLIENT_ID, name: myNickname, skinId: selectedSkinId, isHost: isRoomHost, isAI: false }
-              ]);
-              roomParticipants = merged;
-              if (msg.gameMode && GAME_MODES[msg.gameMode]) {
-                selectRaceMode(msg.gameMode);
-              }
-              renderRoomLobbyGrid();
-            }
-          } else if (msg.type === "START_RACE") {
-            if (currentScreen === "ROOM_LOBBY") {
-              if (msg.gameMode && GAME_MODES[msg.gameMode]) {
-                selectRaceMode(msg.gameMode);
-              }
-              const humanPeers = sanitizeHumanRoomMembers(msg.members || roomParticipants).filter(p => !p.isMe);
-              lastLaunchKind = "ROOM";
-              launch10PRace(`사람 전용 방 [${activeRoomCode}]`, humanPeers, {
-                humanOnlyRoom: true,
-                mapIdx: msg.mapIdx,
-                seed: msg.seed
-              });
-            }
-          } else if (msg.type === "LEAVE_ROOM") {
-            if (currentScreen === "ROOM_LOBBY") {
-              roomParticipants = sanitizeHumanRoomMembers(
-                roomParticipants.filter(p => p.id !== msg.senderId)
-              );
-              renderRoomLobbyGrid();
-            }
-          }
+          handleIncomingNetworkMsg(event && event.data);
         };
       }
 
@@ -3443,6 +4051,7 @@
 
       function launch10PRace(kindLabel, presetPeers = [], options = {}) {
         clearTimers();
+        stopMatchmakingLoop();
         resetInputs();
         myNickname = getSanitizedNickname();
         safeSetStorage("parkour_nickname", myNickname);
@@ -3500,6 +4109,7 @@
 
       function startTrainingGround() {
         clearTimers();
+        stopMatchmakingLoop();
         resetInputs();
         lastLaunchKind = "TRAINING";
         myNickname = getSanitizedNickname();
@@ -3533,16 +4143,25 @@
         setScreen("TRAINING");
       }
 
-      function exitToLobby(msg = "원하는 모드와 스킨을 고른 뒤 랜덤 매치, 훈련장, AI 대전 또는 방 만들기를 눌러보세요!") {
+      function exitToLobby(msg = "원하는 모드와 스킨을 고른 뒤 랜덤 매치(사람 10인), 훈련장, AI 대전 또는 방 만들기를 눌러보세요!") {
         if (currentScreen === "ROOM_LOBBY" && activeRoomCode) {
           broadcastRoomEvent({ type: "LEAVE_ROOM" });
         }
+        if (currentScreen === "MATCHMAKING") {
+          sendMultiMsg({ type: "MM_LEAVE" });
+        }
         clearTimers();
+        stopMatchmakingLoop();
         resetInputs();
         elapsedTime = 0;
         remaining1MTime = TIME_1M_DURATION;
         roomParticipants = [];
+        matchmakingQueue = [];
         isRoomHost = false;
+
+        if (mainPeer && mainPeer.id && mainPeer.id.startsWith("pr10p-rm-")) {
+          initMainPeer();
+        }
 
         const progEl = document.getElementById("progress-me");
         const markerEl = document.getElementById("marker-me");
@@ -3554,9 +4173,7 @@
         renderLobbySkinGrid();
         renderFriendsLists();
         setScreen("LOBBY");
-
-        const statusEl = document.getElementById("room-status-line");
-        if (statusEl) statusEl.textContent = msg;
+        setLobbyStatus(msg);
       }
 
       // ==========================================
@@ -3954,7 +4571,31 @@
           }
         }
 
-        // AI 봇 물리 (실제 발판 착지 + 단일 점프 + 가시/낙사 시 체크포인트 리스폰)
+        // 실시간 멀티플레이어 위치 송신 (약 20Hz)
+        if (!isTraining && racers.some(r => r.isRoomPeer)) {
+          const nowMs = performance.now();
+          if (nowMs - lastPosSyncSentAt >= 50) {
+            lastPosSyncSentAt = nowMs;
+            sendMultiMsg({
+              type: "RACE_POS",
+              roomCode: activeRoomCode || "",
+              playerId: MY_CLIENT_ID,
+              name: myNickname,
+              skinId: selectedSkinId,
+              x: Math.round(player.x),
+              y: Math.round(player.y),
+              vx: Math.round(player.vx),
+              vy: Math.round(player.vy),
+              facing: player.facing,
+              grounded: player.grounded,
+              walkPhase: Number(player.walkPhase.toFixed(2)),
+              finished: player.finished,
+              finishTime: player.finishTime
+            });
+          }
+        }
+
+        // AI 봇 물리 (오직 'AI 대전' 모드에서만 생성되며 실제 발판 충돌 및 단일 점프 수행)
         for (const r of racers) {
           if (!r.isBot) continue;
           if (r.deadFlashTimer > 0) r.deadFlashTimer = Math.max(0, r.deadFlashTimer - dt);
@@ -4179,7 +4820,7 @@
         ctx.translate(cx, bodyCenterY);
         ctx.rotate(tilt);
         ctx.scale(dir, 1);
-        if (isGhost) ctx.globalAlpha = 0.68;
+        if (isGhost) ctx.globalAlpha = 0.72;
         if (isFlashing && Math.sin(animClock * 38) > 0) ctx.globalAlpha = 0.35;
 
         drawLeg(-3.5, 12.5, leftAngle, leftLift, legLen, footLen, skin.accent, skin.body, true);
@@ -4242,7 +4883,7 @@
         ctx.restore();
 
         ctx.save();
-        if (isGhost) ctx.globalAlpha = 0.88;
+        if (isGhost) ctx.globalAlpha = 0.9;
         ctx.font = "bold 11px sans-serif";
         ctx.textAlign = "center";
         ctx.fillStyle = isFlashing ? "#fca5a5" : (isGhost ? "#e2e8f0" : "#38bdf8");
@@ -4398,7 +5039,11 @@
           }
           case "random-match": {
             lastLaunchKind = "RANDOM";
-            launch10PRace("10인 랜덤 매치");
+            openRandomMatchmakingQueue();
+            break;
+          }
+          case "start-mm-now": {
+            startMatchmakingRaceNow();
             break;
           }
           case "start-training": {
@@ -4419,7 +5064,7 @@
           }
           case "start-bot": {
             lastLaunchKind = "BOT";
-            launch10PRace("AI 대전");
+            launch10PRace("AI 대전", [], { humanOnlyRoom: false });
             break;
           }
           case "create-room": {
@@ -4448,10 +5093,9 @@
           }
           case "join-room": {
             const codeInput = document.getElementById("room-code-input");
-            const code = (codeInput ? codeInput.value : "").trim().toUpperCase();
+            const code = normalizeRoomCode(codeInput ? codeInput.value : "");
             if (code.length < 4) {
-              const statusEl = document.getElementById("room-status-line");
-              if (statusEl) statusEl.textContent = "⚠️ 4~6자리 방 코드를 입력하거나 먼저 '방 만들기'를 눌러주세요!";
+              setLobbyStatus("⚠️ 4~6자리 방 코드를 입력하거나 먼저 '방 만들기'를 눌러주세요!");
               if (codeInput) codeInput.focus();
               return;
             }
@@ -4459,7 +5103,7 @@
             break;
           }
           case "accept-friend-invite": {
-            const code = (pendingInviteRoomCode || "").trim().toUpperCase();
+            const code = normalizeRoomCode(pendingInviteRoomCode);
             hideInviteToast();
             if (code.length >= 4) {
               joinCustomHumanRoom(code);
@@ -4467,11 +5111,11 @@
             break;
           }
           case "invite-room": {
-            if (!activeRoomCode) activeRoomCode = generateRoomCode(6);
+            if (!activeRoomCode) activeRoomCode = generateFiveDigitRoomCode();
             const codeInput = document.getElementById("room-code-input");
             if (codeInput) codeInput.value = activeRoomCode;
             copyTextFallback(activeRoomCode);
-            showInviteToast(`🔗 방 초대 코드 [${activeRoomCode}] 클립보드 복사 완료!`, false);
+            showInviteToast(`🔗 방 초대 코드 [${activeRoomCode}] 클립보드 복사 완료! 친구에게 코드를 알려주세요.`, false);
             break;
           }
           case "close-invite-toast": {
@@ -4505,11 +5149,13 @@
           case "rematch": {
             if (lastLaunchKind === "TRAINING") {
               startTrainingGround();
+            } else if (lastLaunchKind === "RANDOM") {
+              openRandomMatchmakingQueue();
             } else if (lastLaunchKind === "ROOM") {
               const humanPeers = sanitizeHumanRoomMembers(roomParticipants).filter(p => !p.isMe);
               launch10PRace(`사람 전용 방 [${activeRoomCode || "CUSTOM"}]`, humanPeers, { humanOnlyRoom: true });
             } else {
-              launch10PRace("재경기 10인");
+              launch10PRace("AI 대전", [], { humanOnlyRoom: false });
             }
             break;
           }
@@ -4587,6 +5233,7 @@
           updateHandButtonUI();
           applyJoystickLayoutToPlayButtons(customJoystickLayout);
           resizeCanvas();
+          initMainPeer();
         } catch (e) {}
 
         const nickInput = document.getElementById("player-name-input");
@@ -4700,6 +5347,18 @@
           if (e.code === "KeyG") input.hand = false;
         });
 
+        window.addEventListener("beforeunload", () => {
+          if (currentScreen === "MATCHMAKING") {
+            sendMultiMsg({ type: "MM_LEAVE" });
+          } else if (currentScreen === "ROOM_LOBBY" && activeRoomCode) {
+            broadcastRoomEvent({ type: "LEAVE_ROOM" });
+          }
+          stopMatchmakingLoop();
+          if (mainPeer) {
+            try { mainPeer.destroy(); } catch (e) {}
+          }
+        });
+
         window.addEventListener("blur", resetInputs);
         window.addEventListener("resize", resizeCanvas);
 
@@ -4715,4 +5374,4 @@
     })();
   </script>
 </body>
-  </html>
+            </html>
