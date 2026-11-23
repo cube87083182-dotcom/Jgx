@@ -49,11 +49,14 @@
     #countdown-overlay.hidden,
     #result-screen.hidden,
     #skin-modal.hidden,
+    #friend-invite-modal.hidden,
     #joystick-editor-overlay.hidden,
     #invite-toast.hidden,
     #hud.hidden,
     #touch-controls.hidden,
-    #btn-training-joy-edit.hidden {
+    #btn-training-joy-edit.hidden,
+    #active-room-lobby-banner.hidden,
+    #btn-rematch.hidden {
       display: none !important;
       pointer-events: none !important;
       visibility: hidden !important;
@@ -196,7 +199,7 @@
       z-index: 5;
     }
 
-    /* 초대 알림 토스트 */
+    /* 알림 토스트 */
     #invite-toast {
       position: fixed;
       top: 14px;
@@ -218,6 +221,37 @@
       font-weight: 800;
       color: #f8fafc;
       pointer-events: auto;
+    }
+
+    /* 친구 초대 실시간 모달 팝업 (00님이 초대했어요 · 수락 / 거절) */
+    #friend-invite-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 180;
+      background: rgba(2, 6, 23, 0.86);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      pointer-events: auto;
+    }
+
+    .invite-popup-card {
+      width: 100%;
+      max-width: 400px;
+      background: linear-gradient(180deg, #1e293b, #0f172a);
+      border: 2.5px solid #38bdf8;
+      border-radius: 18px;
+      padding: 20px 18px;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.9);
+      animation: popScaleIn 0.18s ease-out;
+    }
+
+    @keyframes popScaleIn {
+      from { transform: scale(0.9); opacity: 0.3; }
+      to { transform: scale(1); opacity: 1; }
     }
 
     /* 전체 화면 오버레이 */
@@ -264,6 +298,20 @@
       font-size: 11px;
       color: #94a3b8;
       margin-bottom: 10px;
+    }
+
+    /* 로비 활성 방 유지 배너 (방에서 '로비로' 돌아온 경우 표시 · '🚪 방 나가기'로만 퇴장) */
+    #active-room-lobby-banner {
+      background: linear-gradient(135deg, rgba(234, 88, 12, 0.25), rgba(37, 99, 235, 0.25));
+      border: 2px solid #f59e0b;
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
     /* 로비 상단 프로필 & 골드 바 */
@@ -599,6 +647,11 @@
 
     .btn-invite-room {
       background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    }
+
+    .btn-leave-room {
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      border: 1px solid #fca5a5;
     }
 
     #room-code-input {
@@ -1318,12 +1371,28 @@
   </style>
 </head>
 <body>
-  <!-- 초대 코드 / 친구 방 초대 알림 토스트 -->
+  <!-- 일반 상태 토스트 -->
   <div id="invite-toast" class="hidden" role="status" aria-live="polite">
     <span id="invite-toast-text">🔗 방 초대 코드가 복사되었습니다!</span>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-      <button type="button" id="btn-accept-friend-invite" class="hud-btn hidden" data-action="accept-friend-invite" style="background:#10b981;border-color:#6ee7b7;color:#fff;">참가하기</button>
       <button type="button" id="btn-close-invite-toast" class="hud-btn" data-action="close-invite-toast">닫기</button>
+    </div>
+  </div>
+
+  <!-- 친구 초대 실시간 팝업 모달 (00님이 초대했어요 · 수락 / 거절) -->
+  <div id="friend-invite-modal" class="hidden" role="dialog" aria-modal="true" aria-label="친구 방 초대 알림">
+    <div class="invite-popup-card">
+      <div style="font-size:38px;margin-bottom:6px;">📨</div>
+      <div id="friend-invite-modal-title" style="font-size:19px;font-weight:900;color:#fde047;margin-bottom:6px;">
+        친구님이 초대했어요
+      </div>
+      <div id="friend-invite-modal-desc" style="font-size:13px;font-weight:700;color:#cbd5e1;line-height:1.45;margin-bottom:16px;">
+        사람 전용 방으로 초대했습니다. 수락하면 방으로 바로 이동합니다!
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button type="button" id="btn-accept-invite-popup" class="tool-btn btn-bot" style="padding:10px 24px;font-size:14px;" data-action="accept-friend-invite">✅ 수락</button>
+        <button type="button" id="btn-decline-invite-popup" class="tool-btn btn-leave-room" style="padding:10px 22px;font-size:14px;" data-action="decline-friend-invite">❌ 거절</button>
+      </div>
     </div>
   </div>
 
@@ -1348,9 +1417,6 @@
         <div class="marker-dot" id="marker-me" title="나">나</div>
       </div>
     </div>
-
-    <!-- 훈련장 전용 왼쪽 하단 '조이스틱 편집' 버튼 -->
-    <button type="button" id="btn-training-joy-edit" class="hidden" data-action="open-joystick-editor">🕹️ 조이스틱 편집</button>
 
     <!-- 🌐 10인 랜덤 매치 대기실 오버레이 (100% 실제 사람 전용 매칭 · AI 봇 절대 없음) -->
     <div id="matchmaking-overlay" class="hidden" role="dialog" aria-label="10인 랜덤 매치 사람 전용 매칭 대기열">
@@ -1391,14 +1457,15 @@
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <button type="button" class="tool-btn btn-invite-room" data-action="invite-room">📋 방 코드 복사</button>
             <button type="button" class="tool-btn btn-bot" id="btn-start-room-race" data-action="start-room-race">▶ 레이스 시작</button>
-            <button type="button" class="hud-btn exit-btn" data-action="exit-lobby">✕ 나가기</button>
+            <button type="button" class="hud-btn" data-action="back-to-lobby-keep-room" style="background:#334155;border-color:#94a3b8;">🏠 로비로 (방 유지)</button>
+            <button type="button" class="hud-btn exit-btn" data-action="leave-room-explicit">🚪 방 나가기</button>
           </div>
         </div>
         <div class="lineup-grid" id="room-lobby-grid"></div>
         <div class="friends-panel">
           <div class="friends-panel-header">
             <span id="room-friends-count">👥 내 친구 목록 (방으로 즉시 초대 가능)</span>
-            <span style="font-size:10.5px;color:#94a3b8;">레이스 순위표에서 '+' 버튼을 눌러 친구를 추가하세요</span>
+            <span style="font-size:10.5px;color:#94a3b8;">친구 초대 버튼을 누르면 친구 화면에 '00님이 초대했어요' 팝업이 뜹니다!</span>
           </div>
           <div class="friends-list-row" id="room-friends-list"></div>
         </div>
@@ -1487,6 +1554,18 @@
         <div class="title">PARKOUR RUSH 10P</div>
         <div class="subtitle">스피드전 · 아이템전 · 1분전 · 10인 사람 랜덤매치 · AI 대전 · 10초 팔뻗어오르기 · 훈련장</div>
 
+        <!-- 현재 참가 중인 방 유지 배너 (오직 '🚪 방 나가기'를 눌러야만 방 퇴장) -->
+        <div id="active-room-lobby-banner" class="hidden">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="font-size:13px;font-weight:900;color:#fde047;" id="active-room-banner-text">🏠 방 [00000]에 참가 중 (1명)</span>
+            <span style="font-size:11px;color:#cbd5e1;">로비에서도 방이 유지됩니다</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button type="button" class="tool-btn btn-join-room" data-action="reopen-active-room">📋 대기실 열기</button>
+            <button type="button" class="tool-btn btn-leave-room" data-action="leave-room-explicit">🚪 방 나가기</button>
+          </div>
+        </div>
+
         <!-- 프로필 & 골드 상단 바 -->
         <div class="profile-bar">
           <div class="profile-left">
@@ -1554,7 +1633,7 @@
         <div class="friends-panel">
           <div class="friends-panel-header">
             <span id="lobby-friends-count">👥 친구 목록 (0명)</span>
-            <span style="font-size:10.5px;color:#94a3b8;">레이스 순위표에서 이름 옆 '+' 버튼을 눌러 친구 추가 후 방으로 초대!</span>
+            <span style="font-size:10.5px;color:#94a3b8;">초대 버튼을 누르면 친구 화면에 '00님이 초대했어요' 팝업이 뜹니다!</span>
           </div>
           <div class="friends-list-row" id="lobby-friends-list"></div>
         </div>
@@ -1589,7 +1668,7 @@
         <div id="result-desc" style="font-size:13px;color:#cbd5e1;margin-top:4px;">총 10명 중 1위</div>
         <div id="result-reward-banner" class="reward-banner">3위 안에 들면 50G를 획득합니다.</div>
         <div id="leaderboard-list"></div>
-        <div style="display:flex;gap:8px;">
+        <div style="display:flex;gap:8px;" id="result-actions-row">
           <button type="button" class="main-btn btn-online" id="btn-rematch" data-action="rematch">🔄 다시 달리기</button>
           <button type="button" class="main-btn btn-bot" id="btn-result-lobby" data-action="exit-lobby">🏠 로비로</button>
         </div>
@@ -1761,8 +1840,25 @@
       let roomParticipants = [];
       let matchmakingQueue = [];
       let matchmakingTimer = null;
-      let pendingInviteRoomCode = "";
+      let incomingInviteData = null; // { roomCode, fromName, fromPeerId }
       const MY_CLIENT_ID = "HUMAN_" + Math.random().toString(36).slice(2, 10).toUpperCase();
+
+      function updateActiveRoomBannerUI() {
+        const bannerEl = document.getElementById("active-room-lobby-banner");
+        const textEl = document.getElementById("active-room-banner-text");
+        if (!bannerEl) return;
+
+        if (activeRoomCode) {
+          const memberCount = Math.max(1, roomParticipants.length);
+          const roleTag = isRoomHost ? "방장" : "참가자";
+          if (textEl) {
+            textEl.textContent = `🏠 방 [${activeRoomCode}] 유지 중 (${roleTag} · ${memberCount}명)`;
+          }
+          bannerEl.classList.remove("hidden");
+        } else {
+          bannerEl.classList.add("hidden");
+        }
+      }
 
       function setScreen(screenName) {
         currentScreen = screenName;
@@ -1783,6 +1879,10 @@
             el.classList.toggle("hidden", key !== screenName);
           }
         });
+
+        if (screenName === "LOBBY") {
+          updateActiveRoomBannerUI();
+        }
 
         const skinModal = document.getElementById("skin-modal");
         if (skinModal && screenName !== "LOBBY") {
@@ -2149,7 +2249,7 @@
       }
 
       // ==========================================
-      // 5. 친구 목록 (순위표 '+' 추가 / 로비 & 방 대기실 방 초대)
+      // 5. 친구 목록 & 실시간 초대 팝업 (00님이 초대했어요 · 수락 / 거절)
       // ==========================================
       const FRIENDS_STORAGE_KEY = "parkour_friends_list_v1";
       let friendList = (() => {
@@ -2160,7 +2260,8 @@
               .filter(f => f && typeof f.name === "string" && f.name.trim())
               .map(f => ({
                 name: f.name.trim().slice(0, 10),
-                skinId: SKINS[f.skinId] ? Number(f.skinId) : 0
+                skinId: SKINS[f.skinId] ? Number(f.skinId) : 0,
+                peerId: typeof f.peerId === "string" ? f.peerId : ""
               }));
           }
         } catch (e) {}
@@ -2176,13 +2277,19 @@
         return friendList.some(f => f.name === clean);
       }
 
-      function addFriend(name, skinId = 0) {
+      function addFriend(name, skinId = 0, peerId = "") {
         const clean = String(name || "").trim().slice(0, 10);
         if (!clean || clean === myNickname) return false;
-        if (isFriendName(clean)) return false;
+        const existing = friendList.find(f => f.name === clean);
+        if (existing) {
+          if (peerId) existing.peerId = peerId;
+          saveFriends();
+          return false;
+        }
         friendList.push({
           name: clean,
-          skinId: SKINS[skinId] ? Number(skinId) : 0
+          skinId: SKINS[skinId] ? Number(skinId) : 0,
+          peerId: String(peerId || "")
         });
         saveFriends();
         SoundEngine.playItemPickup();
@@ -2197,27 +2304,115 @@
         renderFriendsLists();
       }
 
+      function showFriendInviteModal(fromName, roomCode, fromPeerId = "") {
+        const cleanFrom = String(fromName || "친구").trim().slice(0, 10);
+        const cleanCode = normalizeRoomCode(roomCode);
+        if (!cleanCode) return;
+
+        incomingInviteData = {
+          roomCode: cleanCode,
+          fromName: cleanFrom,
+          fromPeerId: String(fromPeerId || "")
+        };
+
+        const modalEl = document.getElementById("friend-invite-modal");
+        const titleEl = document.getElementById("friend-invite-modal-title");
+        const descEl = document.getElementById("friend-invite-modal-desc");
+
+        if (titleEl) {
+          titleEl.textContent = `${cleanFrom}님이 초대했어요`;
+        }
+        if (descEl) {
+          descEl.innerHTML = `<span style="color:#38bdf8;font-weight:900;">${cleanFrom}</span>님이 사람 전용 방 [<span style="color:#fde047;font-weight:900;">${cleanCode}</span>]으로 초대했어요.<br>수락하시겠습니까?`;
+        }
+        if (modalEl) {
+          modalEl.classList.remove("hidden");
+        }
+        SoundEngine.playItemPickup();
+        triggerVibration([40, 25, 40]);
+      }
+
+      function hideFriendInviteModal() {
+        incomingInviteData = null;
+        const modalEl = document.getElementById("friend-invite-modal");
+        if (modalEl) modalEl.classList.add("hidden");
+      }
+
+      function acceptIncomingFriendInvite() {
+        if (!incomingInviteData || !incomingInviteData.roomCode) {
+          hideFriendInviteModal();
+          return;
+        }
+        const targetCode = incomingInviteData.roomCode;
+        hideFriendInviteModal();
+        joinCustomHumanRoom(targetCode);
+      }
+
+      function declineIncomingFriendInvite() {
+        if (incomingInviteData && incomingInviteData.roomCode) {
+          sendMultiMsg({
+            type: "FRIEND_INVITE_DECLINED",
+            roomCode: incomingInviteData.roomCode,
+            fromName: myNickname,
+            targetName: incomingInviteData.fromName
+          });
+        }
+        hideFriendInviteModal();
+      }
+
+      function toPlayerNickPeerId(nick) {
+        const clean = String(nick || "").trim().toLowerCase();
+        let hash = 0;
+        for (let i = 0; i < clean.length; i++) {
+          hash = ((hash << 5) - hash + clean.charCodeAt(i)) | 0;
+        }
+        return "pr10p-nick-" + Math.abs(hash).toString(36);
+      }
+
       function inviteFriendToRoom(friendName) {
         const cleanFriend = String(friendName || "").trim();
         if (!cleanFriend) return;
 
-        if (currentScreen !== "ROOM_LOBBY" || !activeRoomCode) {
+        if (!activeRoomCode) {
           openCreateRoomLobby();
+        } else if (currentScreen !== "ROOM_LOBBY") {
+          renderRoomLobbyGrid();
+          setScreen("ROOM_LOBBY");
         }
 
         const codeInput = document.getElementById("room-code-input");
         if (codeInput) codeInput.value = activeRoomCode;
         copyTextFallback(activeRoomCode);
 
-        sendMultiMsg({
+        const invitePayload = {
           type: "FRIEND_INVITE",
           roomCode: activeRoomCode,
           fromName: myNickname,
-          targetName: cleanFriend
+          targetName: cleanFriend,
+          fromPeerId: mainPeer && mainPeer.id ? mainPeer.id : ""
+        };
+
+        sendMultiMsg(invitePayload);
+
+        // 친구의 닉네임 채널 및 저장된 피어 ID로도 직접 초대 팝업 패킷 전송
+        const friendObj = friendList.find(f => f.name === cleanFriend);
+        const candidatePeerIds = new Set([toPlayerNickPeerId(cleanFriend)]);
+        if (friendObj && friendObj.peerId) candidatePeerIds.add(friendObj.peerId);
+
+        candidatePeerIds.forEach(pid => {
+          if (!mainPeer || !peerReady || pid === mainPeer.id) return;
+          try {
+            const directConn = mainPeer.connect(pid, { reliable: true });
+            if (directConn) {
+              directConn.on("open", () => {
+                directConn.send({ senderId: MY_CLIENT_ID, ...invitePayload });
+              });
+            }
+          } catch (e) {}
         });
 
         SoundEngine.playItemPickup();
-        showInviteToast(`📨 [${cleanFriend}]님을 사람 전용 방 [${activeRoomCode}]으로 초대했습니다! (코드 복사됨)`, false);
+        showInviteToast(`📨 [${cleanFriend}]님에게 초대 팝업을 보냈습니다! (방 코드: ${activeRoomCode})`);
       }
 
       function renderFriendsLists() {
@@ -2247,7 +2442,7 @@
             chip.innerHTML = `
               ${imgUrl ? `<img src="${imgUrl}" alt="${friend.name}" />` : ""}
               <span>${friend.name}</span>
-              <button type="button" class="btn-invite-friend">📨 방 초대</button>
+              <button type="button" class="btn-invite-friend">📨 초대</button>
               <button type="button" class="btn-remove-friend" title="친구 삭제">✕</button>
             `;
             const inviteBtn = chip.querySelector(".btn-invite-friend");
@@ -2300,21 +2495,16 @@
       }
 
       let inviteToastTimer = null;
-      function showInviteToast(message, showAcceptButton = false, inviteCode = "") {
+      function showInviteToast(message) {
         const toastEl = document.getElementById("invite-toast");
         const textEl = document.getElementById("invite-toast-text");
-        const acceptBtn = document.getElementById("btn-accept-friend-invite");
         if (!toastEl || !textEl) return;
         textEl.textContent = message;
-        pendingInviteRoomCode = showAcceptButton ? inviteCode : "";
-        if (acceptBtn) {
-          acceptBtn.classList.toggle("hidden", !showAcceptButton);
-        }
         toastEl.classList.remove("hidden");
         if (inviteToastTimer) clearTimeout(inviteToastTimer);
         inviteToastTimer = setTimeout(() => {
           toastEl.classList.add("hidden");
-        }, 7000);
+        }, 5500);
       }
 
       function hideInviteToast() {
@@ -2322,7 +2512,6 @@
           clearTimeout(inviteToastTimer);
           inviteToastTimer = null;
         }
-        pendingInviteRoomCode = "";
         const toastEl = document.getElementById("invite-toast");
         if (toastEl) toastEl.classList.add("hidden");
       }
@@ -2363,14 +2552,37 @@
         roomChannel = null;
       }
 
-      // PeerJS P2P 연결 관리
+      // PeerJS P2P 연결 관리 + 닉네임 초대 수신 전용 피어
       let mainPeer = null;
+      let nickInvitePeer = null;
       let peerReady = false;
-      const peerConns = new Map(); // peerId -> DataConnection
+      const peerConns = new Map();
       let mmLobbyPeer = null;
       const mmLobbyConns = new Map();
       let mmOutboundConns = new Map();
       let lastPosSyncSentAt = 0;
+
+      function initNickInviteListenerPeer() {
+        if (typeof window.Peer === "undefined") return;
+        const desiredNickPeerId = toPlayerNickPeerId(myNickname);
+        if (nickInvitePeer && !nickInvitePeer.destroyed && nickInvitePeer.id === desiredNickPeerId) return;
+
+        if (nickInvitePeer) {
+          try { nickInvitePeer.destroy(); } catch (e) {}
+          nickInvitePeer = null;
+        }
+        try {
+          const np = new window.Peer(desiredNickPeerId, {
+            debug: 0,
+            config: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] }
+          });
+          nickInvitePeer = np;
+          np.on("connection", (conn) => {
+            conn.on("data", (d) => handleIncomingNetworkMsg(d));
+          });
+          np.on("error", () => {});
+        } catch (e) {}
+      }
 
       function attachDataConn(conn) {
         if (!conn) return;
@@ -2379,7 +2591,7 @@
 
         conn.on("open", () => {
           peerConns.set(remoteId, conn);
-          if (currentScreen === "ROOM_LOBBY" && activeRoomCode) {
+          if (activeRoomCode) {
             if (isRoomHost) {
               conn.send({
                 type: "ROOM_SYNC",
@@ -2397,6 +2609,7 @@
                   id: MY_CLIENT_ID,
                   name: myNickname,
                   skinId: selectedSkinId,
+                  peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
                   isHost: false,
                   isAI: false
                 }
@@ -2410,6 +2623,7 @@
                 id: MY_CLIENT_ID,
                 name: myNickname,
                 skinId: selectedSkinId,
+                peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
                 isAI: false,
                 joinedAt: Date.now()
               },
@@ -2442,6 +2656,7 @@
       }
 
       function initMainPeer(customId = null) {
+        initNickInviteListenerPeer();
         if (typeof window.Peer === "undefined") {
           setNetBadge("connecting", "⚡ 로컬/탭 연결 모드");
           return;
@@ -2482,7 +2697,7 @@
               return;
             }
             if (errType === "peer-unavailable") {
-              if (currentScreen === "ROOM_LOBBY" && !isRoomHost) {
+              if (activeRoomCode && !isRoomHost) {
                 setNetBadge("connecting", "🔍 방 코드 호스트 찾는 중...");
               }
               return;
@@ -2563,6 +2778,7 @@
             id: String(m.id),
             name: String(m.name || "플레이어").slice(0, 10),
             skinId: SKINS[m.skinId] ? Number(m.skinId) : 0,
+            peerId: typeof m.peerId === "string" ? m.peerId : "",
             isMe: m.id === MY_CLIENT_ID,
             isHost: !!m.isHost,
             isAI: false,
@@ -2682,6 +2898,7 @@
                     id: MY_CLIENT_ID,
                     name: myNickname,
                     skinId: selectedSkinId,
+                    peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
                     isAI: false,
                     joinedAt: Date.now()
                   },
@@ -2712,6 +2929,7 @@
           id: MY_CLIENT_ID,
           name: myNickname,
           skinId: selectedSkinId,
+          peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
           isMe: true,
           isHost: false,
           isAI: false,
@@ -2734,6 +2952,7 @@
               id: MY_CLIENT_ID,
               name: myNickname,
               skinId: selectedSkinId,
+              peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
               isAI: false,
               joinedAt: meObj.joinedAt
             },
@@ -2757,6 +2976,7 @@
                         id: MY_CLIENT_ID,
                         name: myNickname,
                         skinId: selectedSkinId,
+                        peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
                         isAI: false,
                         joinedAt: meObj.joinedAt
                       },
@@ -2776,7 +2996,7 @@
         matchmakingTimer = setInterval(pollMatchmaking, 1100);
       }
 
-      // --- 방 만들기 / 방 참가 (5자리 코드 · 100% 사람 전용 방) ---
+      // --- 방 만들기 / 방 참가 (5자리 코드 · 100% 사람 전용 방 · 오직 '🚪 방 나가기'로만 퇴장) ---
       function renderRoomLobbyGrid() {
         const titleEl = document.getElementById("room-lobby-title");
         const subEl = document.getElementById("room-lobby-subtitle");
@@ -2832,6 +3052,7 @@
           `;
           gridEl.appendChild(card);
         }
+        updateActiveRoomBannerUI();
         renderFriendsLists();
       }
 
@@ -2841,16 +3062,28 @@
         myNickname = getSanitizedNickname();
         safeSetStorage("parkour_nickname", myNickname);
 
+        if (activeRoomCode) {
+          broadcastRoomEvent({ type: "LEAVE_ROOM" });
+        }
+
         isRoomHost = true;
         activeRoomCode = generateFiveDigitRoomCode();
         const codeInput = document.getElementById("room-code-input");
         if (codeInput) codeInput.value = activeRoomCode;
 
+        initMainPeer(toRoomPeerId(activeRoomCode));
         roomParticipants = sanitizeHumanRoomMembers([
-          { id: MY_CLIENT_ID, name: myNickname, skinId: selectedSkinId, isMe: true, isHost: true, isAI: false }
+          {
+            id: MY_CLIENT_ID,
+            name: myNickname,
+            skinId: selectedSkinId,
+            peerId: toRoomPeerId(activeRoomCode),
+            isMe: true,
+            isHost: true,
+            isAI: false
+          }
         ]);
 
-        initMainPeer(toRoomPeerId(activeRoomCode));
         renderRoomLobbyGrid();
         setScreen("ROOM_LOBBY");
         broadcastRoomEvent({ type: "ROOM_SYNC", members: roomParticipants, gameMode: selectedGameMode });
@@ -2865,18 +3098,30 @@
         myNickname = getSanitizedNickname();
         safeSetStorage("parkour_nickname", myNickname);
 
+        if (activeRoomCode && activeRoomCode !== cleanCode) {
+          broadcastRoomEvent({ type: "LEAVE_ROOM" });
+        }
+
         isRoomHost = false;
         activeRoomCode = cleanCode;
         const codeInput = document.getElementById("room-code-input");
         if (codeInput) codeInput.value = activeRoomCode;
 
-        roomParticipants = sanitizeHumanRoomMembers([
-          { id: MY_CLIENT_ID, name: myNickname, skinId: selectedSkinId, isMe: true, isHost: false, isAI: false }
-        ]);
-
         if (!mainPeer || mainPeer.destroyed) {
           initMainPeer();
         }
+        roomParticipants = sanitizeHumanRoomMembers([
+          {
+            id: MY_CLIENT_ID,
+            name: myNickname,
+            skinId: selectedSkinId,
+            peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
+            isMe: true,
+            isHost: false,
+            isAI: false
+          }
+        ]);
+
         setNetBadge("connecting", `🔍 방 [${activeRoomCode}] 연결중...`);
         renderRoomLobbyGrid();
         setScreen("ROOM_LOBBY");
@@ -2884,14 +3129,21 @@
         const hostPeerId = toRoomPeerId(activeRoomCode);
         let attempts = 0;
         const tryConnectHost = () => {
-          if (currentScreen !== "ROOM_LOBBY" || isRoomHost || activeRoomCode !== cleanCode) return;
+          if (!activeRoomCode || isRoomHost || activeRoomCode !== cleanCode) return;
           const existing = peerConns.get(hostPeerId);
           if (existing && existing.open) {
             existing.send({
               type: "JOIN_REQUEST",
               roomCode: activeRoomCode,
               senderId: MY_CLIENT_ID,
-              member: { id: MY_CLIENT_ID, name: myNickname, skinId: selectedSkinId, isHost: false, isAI: false }
+              member: {
+                id: MY_CLIENT_ID,
+                name: myNickname,
+                skinId: selectedSkinId,
+                peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
+                isHost: false,
+                isAI: false
+              }
             });
             return;
           }
@@ -2900,18 +3152,43 @@
           }
           broadcastRoomEvent({
             type: "JOIN_REQUEST",
-            member: { id: MY_CLIENT_ID, name: myNickname, skinId: selectedSkinId, isHost: false, isAI: false }
+            member: {
+              id: MY_CLIENT_ID,
+              name: myNickname,
+              skinId: selectedSkinId,
+              peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
+              isHost: false,
+              isAI: false
+            }
           });
           attempts++;
           if (attempts < 12) {
             setTimeout(tryConnectHost, 800);
           } else if (roomParticipants.length <= 1) {
             setNetBadge("error", `⚠️ 방 [${activeRoomCode}]을 찾을 수 없음`);
-            showInviteToast(`⚠️ 방 [${activeRoomCode}]에 연결되지 않았습니다. 방장이 방을 만들었는지·코드가 맞는지 확인해 주세요!`, false);
+            showInviteToast(`⚠️ 방 [${activeRoomCode}]에 연결되지 않았습니다. 방장이 방을 만들었는지·코드가 맞는지 확인해 주세요!`);
           }
         };
 
         setTimeout(tryConnectHost, 200);
+      }
+
+      // 오직 '🚪 방 나가기' 버튼을 눌렀을 때만 실행되는 명시적 방 퇴장 함수
+      function leaveActiveRoomExplicitly() {
+        if (activeRoomCode) {
+          broadcastRoomEvent({ type: "LEAVE_ROOM" });
+        }
+        activeRoomCode = "";
+        isRoomHost = false;
+        roomParticipants = [];
+        lastLaunchKind = "BOT";
+
+        if (mainPeer && mainPeer.id && mainPeer.id.startsWith("pr10p-rm-")) {
+          initMainPeer();
+        }
+        updateActiveRoomBannerUI();
+        setScreen("LOBBY");
+        setLobbyStatus("🚪 방에서 나갔습니다.");
       }
 
       function handleIncomingNetworkMsg(msg) {
@@ -2934,6 +3211,7 @@
                   id: MY_CLIENT_ID,
                   name: myNickname,
                   skinId: selectedSkinId,
+                  peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
                   isAI: false
                 },
                 gameMode: selectedGameMode
@@ -2979,14 +3257,19 @@
           return;
         }
 
-        // 2) 친구 방 초대 알림
+        // 2) 실시간 친구 방 초대 팝업 수신 ("00님이 초대했어요" · 수락 / 거절)
         if (msg.type === "FRIEND_INVITE" && msg.roomCode) {
-          SoundEngine.playItemPickup();
-          showInviteToast(
-            `📨 [${msg.fromName || "친구"}]님이 사람 전용 방 [${msg.roomCode}]으로 초대했습니다!`,
-            true,
-            msg.roomCode
-          );
+          const targetName = String(msg.targetName || "").trim();
+          if (!targetName || targetName === myNickname) {
+            showFriendInviteModal(msg.fromName || "친구", msg.roomCode, msg.fromPeerId || "");
+          }
+          return;
+        }
+
+        if (msg.type === "FRIEND_INVITE_DECLINED" && msg.fromName) {
+          if (!msg.targetName || msg.targetName === myNickname) {
+            showInviteToast(`❌ [${msg.fromName}]님이 방 초대를 거절했습니다.`);
+          }
           return;
         }
 
@@ -3016,55 +3299,55 @@
           return;
         }
 
-        // 4) 사람 전용 커스텀 방 동기화
+        // 4) 사람 전용 커스텀 방 동기화 (로비에 돌아와 있어도 activeRoomCode가 유지되면 상태 갱신)
         if (!activeRoomCode || normalizeRoomCode(msg.roomCode) !== normalizeRoomCode(activeRoomCode)) return;
 
         if (msg.type === "JOIN_REQUEST" && msg.member && !msg.member.isAI) {
-          if (currentScreen === "ROOM_LOBBY") {
-            const next = sanitizeHumanRoomMembers([...roomParticipants, { ...msg.member, isAI: false }]);
-            if (next.length !== roomParticipants.length) {
-              SoundEngine.playItemPickup();
-              setNetBadge("ok", `🟢 ${next.length}명 연결됨`);
-            }
-            roomParticipants = next;
-            renderRoomLobbyGrid();
-            if (isRoomHost) {
-              broadcastRoomEvent({ type: "ROOM_SYNC", members: roomParticipants, gameMode: selectedGameMode });
-            }
+          const next = sanitizeHumanRoomMembers([...roomParticipants, { ...msg.member, isAI: false }]);
+          if (next.length !== roomParticipants.length) {
+            SoundEngine.playItemPickup();
+            setNetBadge("ok", `🟢 ${next.length}명 연결됨`);
+          }
+          roomParticipants = next;
+          renderRoomLobbyGrid();
+          if (isRoomHost) {
+            broadcastRoomEvent({ type: "ROOM_SYNC", members: roomParticipants, gameMode: selectedGameMode });
           }
         } else if (msg.type === "ROOM_SYNC" && Array.isArray(msg.members)) {
-          if (currentScreen === "ROOM_LOBBY") {
-            const merged = sanitizeHumanRoomMembers([
-              ...msg.members,
-              { id: MY_CLIENT_ID, name: myNickname, skinId: selectedSkinId, isMe: true, isHost: isRoomHost, isAI: false }
-            ]);
-            roomParticipants = merged;
-            setNetBadge("ok", `🟢 방 [${activeRoomCode}] 연결됨 (${merged.length}명)`);
-            if (msg.gameMode && GAME_MODES[msg.gameMode]) {
-              selectRaceMode(msg.gameMode);
+          const merged = sanitizeHumanRoomMembers([
+            ...msg.members,
+            {
+              id: MY_CLIENT_ID,
+              name: myNickname,
+              skinId: selectedSkinId,
+              peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
+              isMe: true,
+              isHost: isRoomHost,
+              isAI: false
             }
-            renderRoomLobbyGrid();
+          ]);
+          roomParticipants = merged;
+          setNetBadge("ok", `🟢 방 [${activeRoomCode}] 연결됨 (${merged.length}명)`);
+          if (msg.gameMode && GAME_MODES[msg.gameMode]) {
+            selectRaceMode(msg.gameMode);
           }
+          renderRoomLobbyGrid();
         } else if (msg.type === "START_RACE") {
-          if (currentScreen === "ROOM_LOBBY") {
-            if (msg.gameMode && GAME_MODES[msg.gameMode]) {
-              selectRaceMode(msg.gameMode);
-            }
-            const humanPeers = sanitizeHumanRoomMembers(msg.members || roomParticipants).filter(p => !p.isMe);
-            lastLaunchKind = "ROOM";
-            launch10PRace(`사람 전용 방 [${activeRoomCode}]`, humanPeers, {
-              humanOnlyRoom: true,
-              mapIdx: msg.mapIdx,
-              seed: msg.seed
-            });
+          if (msg.gameMode && GAME_MODES[msg.gameMode]) {
+            selectRaceMode(msg.gameMode);
           }
+          const humanPeers = sanitizeHumanRoomMembers(msg.members || roomParticipants).filter(p => !p.isMe);
+          lastLaunchKind = "ROOM";
+          launch10PRace(`사람 전용 방 [${activeRoomCode}]`, humanPeers, {
+            humanOnlyRoom: true,
+            mapIdx: msg.mapIdx,
+            seed: msg.seed
+          });
         } else if (msg.type === "LEAVE_ROOM") {
-          if (currentScreen === "ROOM_LOBBY") {
-            roomParticipants = sanitizeHumanRoomMembers(
-              roomParticipants.filter(p => p.id !== msg.senderId)
-            );
-            renderRoomLobbyGrid();
-          }
+          roomParticipants = sanitizeHumanRoomMembers(
+            roomParticipants.filter(p => p.id !== msg.senderId)
+          );
+          renderRoomLobbyGrid();
         }
       }
 
@@ -3517,6 +3800,7 @@
           result.push({
             id: peer.id,
             name: peer.name,
+            peerId: peer.peerId || "",
             isBot: false,
             isRoomPeer: true,
             x: currentCourse.startX,
@@ -3553,6 +3837,7 @@
           result.push({
             id: "BOT_" + idx,
             name,
+            peerId: "",
             isBot: true,
             isRoomPeer: false,
             x: currentCourse.startX,
@@ -4143,10 +4428,8 @@
         setScreen("TRAINING");
       }
 
-      function exitToLobby(msg = "원하는 모드와 스킨을 고른 뒤 랜덤 매치(사람 10인), 훈련장, AI 대전 또는 방 만들기를 눌러보세요!") {
-        if (currentScreen === "ROOM_LOBBY" && activeRoomCode) {
-          broadcastRoomEvent({ type: "LEAVE_ROOM" });
-        }
+      // 로비로 돌아가기 (방에 참가 중인 경우 방 연결을 유지하며, 오직 '🚪 방 나가기'를 눌러야만 방 퇴장)
+      function exitToLobby(msg = "") {
         if (currentScreen === "MATCHMAKING") {
           sendMultiMsg({ type: "MM_LEAVE" });
         }
@@ -4155,13 +4438,7 @@
         resetInputs();
         elapsedTime = 0;
         remaining1MTime = TIME_1M_DURATION;
-        roomParticipants = [];
         matchmakingQueue = [];
-        isRoomHost = false;
-
-        if (mainPeer && mainPeer.id && mainPeer.id.startsWith("pr10p-rm-")) {
-          initMainPeer();
-        }
 
         const progEl = document.getElementById("progress-me");
         const markerEl = document.getElementById("marker-me");
@@ -4172,8 +4449,16 @@
         renderModeUI();
         renderLobbySkinGrid();
         renderFriendsLists();
+        updateActiveRoomBannerUI();
         setScreen("LOBBY");
-        setLobbyStatus(msg);
+
+        if (msg) {
+          setLobbyStatus(msg);
+        } else if (activeRoomCode) {
+          setLobbyStatus(`🏠 방 [${activeRoomCode}] 연결이 유지되고 있습니다. 방을 나가려면 상단 '🚪 방 나가기'를 누르세요.`);
+        } else {
+          setLobbyStatus("원하는 모드와 스킨을 고른 뒤 랜덤 매치(사람 10인), 훈련장, AI 대전 또는 방 만들기를 눌러보세요!");
+        }
       }
 
       // ==========================================
@@ -4190,6 +4475,7 @@
             id: "ME",
             name: myNickname,
             skinId: selectedSkinId,
+            peerId: mainPeer && mainPeer.id ? mainPeer.id : "",
             progress: getProgress(player.x),
             finished: player.finished,
             finishTime: player.finishTime,
@@ -4199,6 +4485,7 @@
             id: r.id,
             name: r.name,
             skinId: r.skinId,
+            peerId: r.peerId || "",
             progress: r.progress,
             finished: r.finished,
             finishTime: r.finishTime,
@@ -4258,6 +4545,13 @@
         if (titleEl) titleEl.textContent = `${myNickname} · ${myRank}위!`;
         if (descEl) descEl.textContent = `[${modeTitle}] 총 ${totalCount}명 중 ${myRank}위 · ${recordText}`;
 
+        // 방에서 매치가 끝난 경우 '다시 달리기' 버튼 삭제(숨김) 처리
+        const rematchBtn = document.getElementById("btn-rematch");
+        if (rematchBtn) {
+          const isRoomMatch = (lastLaunchKind === "ROOM" || !!activeRoomCode);
+          rematchBtn.classList.toggle("hidden", isRoomMatch);
+        }
+
         const lbEl = document.getElementById("leaderboard-list");
         if (lbEl) {
           lbEl.innerHTML = "";
@@ -4286,10 +4580,10 @@
               addBtn.onclick = (e) => {
                 if (e) e.stopPropagation();
                 SoundEngine.unlock();
-                if (addFriend(s.name, s.skinId)) {
+                if (addFriend(s.name, s.skinId, s.peerId)) {
                   addBtn.classList.add("added");
                   addBtn.textContent = "✓ 친구";
-                  showInviteToast(`👥 [${s.name}]님을 친구로 추가했습니다! 로비에서 방으로 초대할 수 있어요.`, false);
+                  showInviteToast(`👥 [${s.name}]님을 친구로 추가했습니다! 로비에서 방으로 초대할 수 있어요.`);
                 }
               };
               nameWrap.appendChild(addBtn);
@@ -5071,6 +5365,21 @@
             openCreateRoomLobby();
             break;
           }
+          case "reopen-active-room": {
+            if (activeRoomCode) {
+              renderRoomLobbyGrid();
+              setScreen("ROOM_LOBBY");
+            }
+            break;
+          }
+          case "back-to-lobby-keep-room": {
+            exitToLobby();
+            break;
+          }
+          case "leave-room-explicit": {
+            leaveActiveRoomExplicitly();
+            break;
+          }
           case "start-room-race": {
             lastLaunchKind = "ROOM";
             const humanMembers = sanitizeHumanRoomMembers(roomParticipants);
@@ -5103,11 +5412,11 @@
             break;
           }
           case "accept-friend-invite": {
-            const code = normalizeRoomCode(pendingInviteRoomCode);
-            hideInviteToast();
-            if (code.length >= 4) {
-              joinCustomHumanRoom(code);
-            }
+            acceptIncomingFriendInvite();
+            break;
+          }
+          case "decline-friend-invite": {
+            declineIncomingFriendInvite();
             break;
           }
           case "invite-room": {
@@ -5115,7 +5424,7 @@
             const codeInput = document.getElementById("room-code-input");
             if (codeInput) codeInput.value = activeRoomCode;
             copyTextFallback(activeRoomCode);
-            showInviteToast(`🔗 방 초대 코드 [${activeRoomCode}] 클립보드 복사 완료! 친구에게 코드를 알려주세요.`, false);
+            showInviteToast(`🔗 방 초대 코드 [${activeRoomCode}] 클립보드 복사 완료! 친구에게 코드를 알려주세요.`);
             break;
           }
           case "close-invite-toast": {
@@ -5151,9 +5460,6 @@
               startTrainingGround();
             } else if (lastLaunchKind === "RANDOM") {
               openRandomMatchmakingQueue();
-            } else if (lastLaunchKind === "ROOM") {
-              const humanPeers = sanitizeHumanRoomMembers(roomParticipants).filter(p => !p.isMe);
-              launch10PRace(`사람 전용 방 [${activeRoomCode || "CUSTOM"}]`, humanPeers, { humanOnlyRoom: true });
             } else {
               launch10PRace("AI 대전", [], { humanOnlyRoom: false });
             }
@@ -5250,6 +5556,7 @@
             myNickname = getSanitizedNickname();
             nickInput.value = myNickname;
             safeSetStorage("parkour_nickname", myNickname);
+            initNickInviteListenerPeer();
           });
         }
 
@@ -5350,12 +5657,15 @@
         window.addEventListener("beforeunload", () => {
           if (currentScreen === "MATCHMAKING") {
             sendMultiMsg({ type: "MM_LEAVE" });
-          } else if (currentScreen === "ROOM_LOBBY" && activeRoomCode) {
+          } else if (activeRoomCode) {
             broadcastRoomEvent({ type: "LEAVE_ROOM" });
           }
           stopMatchmakingLoop();
           if (mainPeer) {
             try { mainPeer.destroy(); } catch (e) {}
+          }
+          if (nickInvitePeer) {
+            try { nickInvitePeer.destroy(); } catch (e) {}
           }
         });
 
@@ -5374,4 +5684,4 @@
     })();
   </script>
 </body>
-            </html>
+  </html>
